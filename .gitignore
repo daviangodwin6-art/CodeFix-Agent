@@ -5,3 +5,5 @@ __pycache__/
 .pytest_cache/
 *.pyc
 frontend/node_modules/
+.claude/
+CLAUDE.md

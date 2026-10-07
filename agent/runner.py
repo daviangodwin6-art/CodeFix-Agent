@@ -46,7 +46,7 @@ def run_tests(python, repo, run_dir, label, target=None):
     """Run the full suite (or only `target`, a repo-relative test file). Returns ({test_id: passed|failed|error|skipped}, output)."""
     xml = Path(run_dir) / f"junit_{label}.xml"
     xml.unlink(missing_ok=True)
-    code, out = _run([str(python), "-m", "pytest", "-q", "--rootdir=.", "-p", "no:cacheprovider",
+    code, out = _run([str(python), "-m", "pytest", "-q", "--color=no", "--rootdir=.", "-p", "no:cacheprovider",
                       "--continue-on-collection-errors", f"--junitxml={xml}", *([target] if target else [])],
                      repo, int(os.getenv("TEST_TIMEOUT", "300")))
     if code == 5:  # no tests collected

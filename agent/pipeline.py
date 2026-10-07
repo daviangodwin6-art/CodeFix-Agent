@@ -6,6 +6,7 @@ feature:  [implement (LLM, may add new source files) -> apply+check -> verify]
           x MAX_ATTEMPTS, then report/publish. verify is the same code for both modes.
 """
 import os
+import re
 import uuid
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from . import edits, llm, prompts, report, runner
 from . import repo as repo_mod
 
 RUNS_DIR = Path(__file__).parent.parent / "runs"
-FILE_CAP = 12000  # characters of one file shown to the LLM
+FILE_CAP = 100000  # characters of one file shown to the LLM
 LOG_CAP = 3000    # characters of test output fed back to the LLM
 ZERO = {"passed": 0, "failed": 0, "total": 0}
 # Everything that differs between the two task types. The steps around it are shared.
@@ -21,6 +22,19 @@ MODES = {"debug": {"label": "edit", "new_files": False, "reproduce": True},
          "feature": {"label": "implement", "new_files": True, "reproduce": False}}
 OPTIONS = [{"id": "fork", "label": "Fork to my GitHub account, push the branch there, give me a pull request link"},
            {"id": "local", "label": "Don't write to GitHub: only save the result to a local folder"}]
+
+
+def _shown(text):
+    """File text for the LLM; a cut file ends with a marker so the model never edits the cut line."""
+    if len(text) <= FILE_CAP:
+        return text
+    return text[:FILE_CAP].rsplit("\n", 1)[0] + "\n[... file truncated: the rest is not shown; do not edit near this point ...]"
+
+
+def _crash_in_source(out, test_path):
+    """Did a collection crash happen inside the repo's own code (not the test file, not a library)?"""
+    frames = re.findall(r"^(\S+\.py):\d+: in ", out, re.M)
+    return any(Path(p).name != Path(test_path).name and not re.search(r"site-packages|_pytest|importlib|<frozen", p) for p in frames)
 
 
 def run(repo_src, task, on_step=None, run_id=None, runs_dir=None, ask=None, choice=None, task_type="debug"):
@@ -132,15 +146,18 @@ def _run(repo_src, task, run_id, run_dir, result, step, done, ask_user, choice=N
             break
     if not paths:
         raise RuntimeError("localize step returned no files that exist in the repository")
-    files = {p: (repo / p).read_text(encoding="utf-8", errors="replace")[:FILE_CAP] for p in paths}
+    files = {p: _shown((repo / p).read_text(encoding="utf-8", errors="replace")) for p in paths}
     done(", ".join(paths))
 
+    broken = [l for l in repo_map.splitlines() if "SYNTAX ERROR" in l]
+    hint = "\n\nFiles that do not parse right now (fix these too):\n" + "\n".join(broken)
+    edit_task = task + (hint if broken else "")
     feedback = ""
-    for attempt in range(1, int(os.getenv("MAX_ATTEMPTS", "3")) + 1):
+    for attempt in range(1, int(os.getenv("MAX_ATTEMPTS", "5")) + 1):
         result["attempts"] = attempt
         step(f"{mode['label']} #{attempt}")
         try:
-            proposal = llm.complete_json(prompts.edit(task, files, feedback, task_type))
+            proposal = llm.complete_json(prompts.edit(edit_task, files, feedback, task_type))
             originals = edits.apply(repo, proposal, allow_new_files=mode["new_files"])
             result["import_check"] = edits.check(repo, originals, python, run_dir)
         except (edits.EditError, ValueError) as e:
@@ -161,10 +178,18 @@ def _run(repo_src, task, run_id, run_dir, result, step, done, ask_user, choice=N
                 pre, out = None, str(e)
             finally:
                 repo_mod.unstash(repo)
-            result["reproduced"] = bool(pre) and any(s in ("failed", "error") for s in pre.values())
+            # A collection error (import crash, syntax error) has an empty class name in the junit file ("::name").
+            # It fails for the wrong reason, so it does not prove the bug.
+            pre = pre or {}
+            crashed = any(s == "error" and t.startswith("::") for t, s in pre.items())
+            # A crash inside the repo's own code on import is a real symptom; one in the test file itself is not.
+            result["reproduced"] = (any(s == "failed" or (s == "error" and not t.startswith("::")) for t, s in pre.items())
+                                    or (crashed and _crash_in_source(out, new_test)))
             if not result["reproduced"]:
-                feedback = ("Your new test passes (or collects nothing) on the ORIGINAL, unfixed code, so it does not "
-                            f"reproduce the bug. Write a test that fails before the fix.\n\nTest output (end):\n{out[-LOG_CAP:]}")
+                why = ("could not be collected because of a mistake in the test file itself (bad import, name or syntax), "
+                       "so it proves nothing about the bug" if crashed else
+                       "passes (or collects nothing) on the ORIGINAL, unfixed code, so it does not reproduce the bug")
+                feedback = f"Your new test {why}. Write a test that fails before the fix, for the right reason.\n\nTest output (end):\n{out[-LOG_CAP:]}"
                 repo_mod.revert(repo)
                 done("new test does not fail on the original code", "error")
                 continue

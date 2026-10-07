@@ -69,7 +69,8 @@ Rules (checked by code; a violation rejects the whole attempt):
 """
 
 RULES = """- "search" must be copied character for character from the file shown above, including
-  indentation, and must occur exactly once in that file. Keep it short but unique.
+  indentation, and must occur exactly once in that file. Keep it short but unique. Never use text from a
+  "[... file truncated ...]" marker or from the last lines before it.
 - Change as few lines as possible. Do not reformat, rename or refactor anything else.
 - Do NOT edit existing test files or conftest.py. Put the new test in a NEW file next to the
   existing tests, named test_*.py, written in the same style (same imports and fixtures;
@@ -77,6 +78,13 @@ RULES = """- "search" must be copied character for character from the file shown
 - Use only modules, functions and names that exist in the files shown above or in the Python
   standard library (or that you create in this same answer). Do not invent imports or APIs.
 - Every test that passes now must still pass.
+- Python reports only the FIRST syntax error in a file. Read every line of a file that does not
+  parse and fix all of its syntax errors (missing ":" or ")", "=" instead of "==", bad indentation)
+  in this one answer, before the logic bugs.
+- Importing a module must never run an interactive loop, input() or other blocking code. If a file
+  does that at top level (a menu loop, a script body), move it into def main() and call it under
+  if __name__ == "__main__": as part of the fix. The new test must only import and call functions,
+  never run the script body and never read stdin.
 """
 
 EDIT = {"debug": EDIT_DEBUG + RULES, "feature": EDIT_FEATURE + RULES}

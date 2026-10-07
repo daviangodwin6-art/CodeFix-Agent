@@ -11,7 +11,7 @@ repo + task -> working copy on a new branch -> baseline pytest -> repo map -> LL
   Debug:        LLM proposes fix + new test -> code checks it -> new test must FAIL on the original code
   Add feature:  LLM proposes change (may add new files) + new test -> code checks it
             -> full pytest again -> compare with baseline (same check for both modes)
-            -> keep (commit + report) or revert and retry (max 3)
+            -> keep (commit + report) or revert and retry (max MAX_ATTEMPTS, default 5)
 ```
 
 Two modes, chosen with the **Debug / Add feature** toggle on the page (CLI: `--feature`):
@@ -43,7 +43,7 @@ cost the most points:
 | Google Gemini API (`google-genai`), models set by `GEMINI_MODEL` (`gemini-3.7-flash`, fallback `gemini-3.5-flash-lite`) | the LLM, hosted, pre-trained, not fine-tuned |
 | FastAPI + uvicorn | local API and static file server |
 | python-dotenv | loads `.env` |
-| Plain HTML/CSS/JS | web page, no build step, no CDN |
+| React + Vite + Tailwind CSS, anime.js | web page (built files are committed, Node is only needed to change it) |
 
 No datasets. No agent framework. AI coding tools were used to write this code; the team reviewed it.
 
@@ -66,7 +66,7 @@ Edit `.env` (it is gitignored; never commit it):
 | `GEMINI_API_KEY` | key from Google AI Studio (aistudio.google.com, "Get API key") |
 | `GEMINI_MODEL` | Gemini model id; a comma-separated list adds fallbacks tried when a model is overloaded or out of quota |
 | `LLM_PROVIDER` | `gemini`, or `fake` for scripted offline responses (works only on `sample_repo`) |
-| `MAX_ATTEMPTS` | edit retry cap (default 3) |
+| `MAX_ATTEMPTS` | edit retry cap (default 5) |
 | `TEST_TIMEOUT` | seconds before a test run is killed (default 300) |
 
 ## Run
@@ -181,8 +181,11 @@ access and asks (or use `--fork` / `--local`).
 7. **edit** (LLM call 2): task + those files' contents (+ the previous rejection, on a retry) ->
    JSON `{explanation, edits: [{path, search, replace}], new_test: {path, content}}`.
 8. **apply + check** (`agent/edits.py`): test lock, search text must match exactly once, syntax
-   check, import existence check.
-9. **verify**: full pytest run again, compared per test with the baseline.
+   check, import existence check. Files that do not parse before the edit are listed to the model, which is told
+   to fix all their syntax errors at once.
+9. **reproduce** (debug mode only): the new test runs against the original code and must fail there. A crash
+   inside the repository's own code on import counts; a mistake in the test file itself does not.
+   **verify**: full pytest run again, compared per test with the baseline.
 10. **decide** (`agent/pipeline.py`): any rule violation, regression, or failing new test -> `git`
     revert, and the error text goes back into step 7 (at most `MAX_ATTEMPTS` times). Otherwise commit.
 11. **report** (`agent/report.py`): `runs/<id>/report.md` with the explanation, before/after table,
@@ -226,6 +229,5 @@ snapshotted without their git history.
 
 **Known limit of Add feature:** hidden tests may expect names or signatures the request did not spell out; the agent can only follow what the request says.
 
-**Stretch goals (not built):** separate sessions for several people sharing one server (one signed-in user at a time today); JavaScript (`npm test`) adapter; proving the new test fails before the
-fix; rerunning failed tests once as a flaky guard; keyword-search fallback for localization; fetching
-GitHub issue links; opening pull requests.
+**Stretch goals (not built):** separate sessions for several people sharing one server (one signed-in user at a time today); JavaScript (`npm test`) adapter; rerunning failed tests once as a flaky guard; keyword-search fallback for localization; fetching
+GitHub issue links.
