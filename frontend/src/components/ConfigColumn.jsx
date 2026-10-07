@@ -4,9 +4,9 @@ import { CountUp, enter, useAnime } from "../motion.jsx";
 import { CARD, Copy, Icon } from "./ui.jsx";
 
 export const TYPES = {
-  debug: { option: "Debug", label: "Target Task / Bug Report", sample: "login fails when the email has capital letters", },
+  debug: { option: "Debug", label: "Target Task / Bug Report", sample: "login fails when the email has capital letters" },
   feature: { option: "Add feature", label: "Target Task / Feature Request",
-             sample: "add a function email_domain(email) in auth/users.py that returns the part after the @, lowercased", },
+             sample: "add a function email_domain(email) in auth/users.py that returns the part after the @, lowercased" },
 };
 const MODES = [["own", "My repo"], ["other", "Other's"], ["local", "Local"]];
 const FIELD = "w-full bg-slate-50 border border-slate-200 text-slate-900 font-mono text-xs rounded-lg pl-8 pr-2.5 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all";
