@@ -83,6 +83,8 @@ def evict():
             continue
         try:
             delete(row["project_id"], state="evicted")
+        except OSError:  # a file in that venv is locked: its problem, not this run's
+            continue
         finally:
             projects.release(row["project_id"])
         extra -= 1
@@ -93,6 +95,7 @@ def delete(project_id, state="missing"):
     venv = venv_dir(project_id)
     existed = venv.exists()
     if existed:
+        (venv / ".ready").unlink(missing_ok=True)  # first: a half-deleted venv must never look usable
         repo_mod._rmtree(venv)
     projects.set_fields(project_id, env_state=state)
     return existed

@@ -12,8 +12,11 @@ from agent import repo as repo_mod
 FIXTURES = Path(__file__).parent / "fixtures"
 BROKEN = FIXTURES / "syntax_repo"  # calc.py: add() has no colon (does not parse), sub() adds (logic bug)
 ONLY = json.loads((FIXTURES / "fake_llm_syntax_only.json").read_text(encoding="utf-8"))
-# "Repairs" calc.py but also breaks words.shout, which a test that passed at baseline covers.
+# "Repairs" calc.py but also changes VERSION in it, which a test that passed at baseline checks.
 BAD = dict(ONLY["syntax"], edits=ONLY["syntax"]["edits"] + [
+    {"path": "calc.py", "search": 'VERSION = "1"', "replace": 'VERSION = "2"'}])
+# Repairs calc.py and slips in a logic change to a file that parsed fine.
+OUTSIDE = dict(ONLY["syntax"], edits=ONLY["syntax"]["edits"] + [
     {"path": "words.py", "search": "text.upper()", "replace": "text.lower()"}])
 
 
@@ -54,7 +57,8 @@ def test_syntax_errors_are_found_without_running_code():
 
 def test_collection_errors_have_file_and_message(tmp_path):
     results, _ = runner.run_tests(sys.executable, BROKEN, tmp_path, "x")
-    assert results == {"::tests.test_calc": "error", "tests.test_words::test_shout": "passed"}  # shape unchanged
+    assert results == {"::tests.test_calc": "error", "tests.test_words::test_shout": "passed",
+                       "tests.test_version::test_calc_declares_version": "passed"}  # shape unchanged
     (error,) = runner.collection_errors(tmp_path, "x")
     assert error["file"] == "tests/test_calc.py"
     assert "SyntaxError" in error["message"] and "calc.py" in error["message"]
@@ -89,7 +93,7 @@ def test_syntax_only_run(tmp_path, fake):
     assert names(state)[-3:] == ["map", "syntax", "commit to project"]
     assert r["syntax"]["attempts"] == r["attempts"] == 1 and r["syntax"]["only_syntax"] is True
     assert [(f["path"], f["line"], f["after"]) for f in r["syntax"]["files"]] == [("calc.py", 1, "parses")]
-    assert r["baseline"] == {"passed": 1, "failed": 1, "total": 2} and r["after"] == {"passed": 2, "failed": 0, "total": 2}
+    assert r["baseline"] == {"passed": 2, "failed": 1, "total": 3} and r["after"] == {"passed": 3, "failed": 0, "total": 3}
     assert r["files_changed"] == ["calc.py"] and "+def add(a, b):" in r["diff"] and r["regressions"] == []
     # the collection error named the broken file before, and is gone after
     assert [e["file"] for e in runner.collection_errors(run_dir, "baseline")] == ["tests/test_calc.py"]
@@ -114,7 +118,7 @@ def test_syntax_error_and_logic_bug(tmp_path, fake):
     # Reproduced on the REPAIRED code: the new test was collected and failed. On the broken file it
     # could only have been a collection error.
     assert r["reproduced"] is True and runner.collection_errors(run_dir, "reproduce2") == []
-    assert r["after"] == {"passed": 3, "failed": 0, "total": 3} and r["new_tests"] == ["tests.test_sub::test_sub"]
+    assert r["after"] == {"passed": 4, "failed": 0, "total": 4} and r["new_tests"] == ["tests.test_sub::test_sub"]
     # the reported change covers the whole run, not only the last commit
     assert r["files_changed"] == ["calc.py", "tests/test_sub.py"]
     assert "+def add(a, b):" in r["diff"] and "+    return a - b" in r["diff"]
@@ -131,7 +135,7 @@ def test_syntax_fix_that_breaks_a_passing_test_is_retried(tmp_path, fake):
     assert state["status"] == "success", r["error"]
     assert r["syntax"]["attempts"] == r["attempts"] == 2 and r["regressions"] == []
     assert r["files_changed"] == ["calc.py"]  # nothing of the rejected attempt survived
-    assert "text.upper()" in (where(state)[1] / "words.py").read_text()
+    assert 'VERSION = "1"' in (where(state)[1] / "calc.py").read_text()
 
 
 def test_syntax_stage_gives_up_and_reverts(tmp_path, fake):
@@ -139,11 +143,19 @@ def test_syntax_stage_gives_up_and_reverts(tmp_path, fake):
     state = pipeline.run(BROKEN, "calc.py does not parse", run_id="gone")
     r, repo = state["result"], where(state)[1]
     assert state["status"] == "failed" and names(state)[-1] == "syntax" and state["steps"][-1]["status"] == "error"
-    assert r["attempts"] == 2 and r["regressions"] == ["tests.test_words::test_shout"]
+    assert r["attempts"] == 2 and r["regressions"] == ["tests.test_version::test_calc_declares_version"]
     assert "Syntax repair failed" in r["error"] and "broke tests that passed before" in r["error"]
     assert r["syntax"]["files"][0]["after"] == "does not parse" and r["diff"] == ""
     assert git(repo, "status", "--porcelain") == "" and git(repo, "rev-parse", "HEAD").strip() == r["head_before"]
     assert (repo / "calc.py").read_bytes() == (BROKEN / "calc.py").read_bytes()
+
+
+def test_syntax_stage_may_only_edit_the_files_that_do_not_parse(tmp_path, fake):
+    """Otherwise a logic change no test covers could ride along and end as "syntax repair only", with no fail-first proof."""
+    fake({"syntax": OUTSIDE})
+    state = pipeline.run(BROKEN, "calc.py does not parse", run_id="out")
+    assert state["status"] == "failed" and "may only edit ['calc.py']" in state["result"]["error"]
+    assert "text.upper()" in (where(state)[1] / "words.py").read_text()
 
 
 def test_failed_task_after_a_good_repair_keeps_nothing(tmp_path, fake):

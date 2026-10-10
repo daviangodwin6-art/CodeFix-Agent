@@ -33,7 +33,8 @@ def main(argv=None):
     if len(args) not in ((1, 2) if sync or reset_to else (2,)) or any(a.startswith("--") for a in args):
         sys.exit(__doc__)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    scope = repo_mod.whoami() or "local-anon"  # the gh CLI login of this PC
+    # A local folder is the same project online and offline; only GitHub projects belong to the gh CLI login.
+    scope = (repo_mod.whoami() if repo_mod.is_url(args[0]) else "") or "local-anon"
     pid = projects.ensure(scope, args[0])["project_id"]
     try:
         with projects.hold(pid):

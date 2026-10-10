@@ -67,7 +67,7 @@ def prepare(src, dest, branch):
     dest = Path(dest)
     if is_url(src):
         # Full clone, not --depth 1: the workspace is kept, and sync later rebases onto new upstream commits.
-        git(["clone", "-q", src, str(dest)], cwd=dest.parent)
+        git(["clone", "-q", "--", src, str(dest)], cwd=dest.parent)  # --: a source starting with "-" is not an option
         token = current_token()
         # Repo code runs inside this working copy and can read .git/config: the token must not be there.
         if token and token in (dest / ".git" / "config").read_text(encoding="utf-8", errors="replace"):

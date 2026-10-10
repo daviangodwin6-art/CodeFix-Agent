@@ -20,6 +20,9 @@ LOGINS = {}  # token -> GitHub login, memory only, so project requests do not as
 ORIGINS = {"http://localhost:8000", "http://127.0.0.1:8000"}
 
 
+LOCAL = ("localhost", "127.0.0.1")
+
+
 def foreign_origin(method, origin):
     """Is this a state-changing request sent by some other website open in the browser?"""
     return method not in ("GET", "HEAD", "OPTIONS") and bool(origin) and urlsplit(origin).hostname not in ("localhost", "127.0.0.1")
@@ -29,7 +32,10 @@ def foreign_origin(method, origin):
 async def refuse_other_sites(request: Request, call_next):
     # Project ids can be worked out from a login and a repo name, so "unguessable id" protects nothing:
     # without this any web page could start a run, push a branch or delete a project on this machine.
-    if foreign_origin(request.method, request.headers.get("origin")):
+    # The Host check stops DNS rebinding: a page on evil.example that resolves to 127.0.0.1 could otherwise
+    # read projects, diffs and the repo list with plain GET requests.
+    host = urlsplit("//" + request.headers.get("host", "")).hostname
+    if host not in LOCAL or foreign_origin(request.method, request.headers.get("origin")):
         return JSONResponse({"detail": "This request is only accepted from the CodeFix page."}, status_code=403)
     return await call_next(request)
 
@@ -161,12 +167,10 @@ def start_run(body: dict = Body(...)):
 
 @app.get("/api/run/{run_id}")
 def get_run(run_id: str):
-    if run_id in RUNS:
-        return RUNS[run_id]
-    pid = projects.run_project(run_id)  # a run from before a restart
+    pid = RUNS[run_id].get("project_id") if run_id in RUNS else projects.run_project(run_id)  # stored: before a restart
     if not pid or projects.get(pid)["user_scope"] != scope():
         raise HTTPException(404, "Unknown run id.")
-    return projects.run_state(pid, run_id)
+    return RUNS[run_id] if run_id in RUNS else projects.run_state(pid, run_id)
 
 
 # ---- projects ------------------------------------------------------------------------------------

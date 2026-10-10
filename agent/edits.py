@@ -11,7 +11,7 @@ class EditError(Exception):
 
 
 def is_test_file(path):
-    p = Path(path)
+    p = Path(str(path).lower())  # Tests/Test_x.py is the same locked file on Windows and macOS
     return (p.name.startswith("test_") or p.name.endswith("_test.py") or p.name == "conftest.py"
             or bool({"tests", "test"} & set(p.parts[:-1])))
 
@@ -64,6 +64,8 @@ def apply(repo, proposal, allow_new_files=False, require_test=True):
         newline = "\r\n" if "\r\n" in raw else "\n"
         text = raw.replace("\r\n", "\n")
         search, replace = search.replace("\r\n", "\n"), replace.replace("\r\n", "\n")
+        if search == replace:  # nothing would change, and the reproduce step would have nothing to put back
+            raise EditError(f"edit to {rel} changes nothing: search and replace are identical")
         found = text.count(search) if search else 0
         if found != 1:
             raise EditError(f"search text must match exactly once in {rel}, it matched {found} times:\n{search}")

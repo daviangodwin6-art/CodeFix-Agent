@@ -97,14 +97,15 @@ def _tracked(project, repo_src, task, on_step, run_id, task_type, kind):
         status, result["error"] = "env_failed", str(e)
     except Exception as e:  # LLM errors, git errors, bugs: always end in a reported state
         status, result["error"] = "failed", f"{type(e).__name__}: {e}"
-    if state["steps"] and state["steps"][-1]["status"] == "running":
-        done(result["error"][:300], "error")
     if status != "success" and result["head_before"]:
         # Whatever the run left behind (edits, a syntax-stage commit) goes: the project head is unchanged.
+        # First, before anything that could raise (saving state, the caller's callback).
         try:
             projects.rollback(workspace, result["head_before"])
         except Exception as e:
             result["error"] += f"\nCould not put the workspace back: {e}"
+    if state["steps"] and state["steps"][-1]["status"] == "running":
+        done(result["error"][:300], "error")
     state.update(status=status, finished_at=projects.now(), duration_s=round(time.monotonic() - began, 2))
     if run_dir.is_dir():
         project = projects.get(pid)
@@ -120,6 +121,21 @@ FOUND = {"own": ("local", PRESET["local"]), "write": ("mine", "write access: " +
          "none": ("others", "no write access: " + PRESET["others"]),
          "nogh": ("others", "could not check GitHub access (gh missing, not logged in, or offline): treated as someone else's repo"),
          "other": ("mine", "non-GitHub URL: publishing will try to push to it")}
+
+
+def _only_tracked(repo, proposal, allowed=None):
+    """Edits may only touch files git tracks (and, in the syntax stage, only the broken files).
+
+    An ignored file copied in with a local snapshot is never committed and never put back by a revert,
+    so an edit to it would outlive a rejected attempt and every later reset.
+    """
+    paths = [str(e.get("path", "")) for e in proposal.get("edits") or [] if isinstance(e, dict)]
+    outside = [p for p in paths if allowed is not None and p not in allowed]
+    if outside:
+        raise edits.EditError(f"this step may only edit {sorted(allowed)}; you also edited {outside}")
+    for p in paths:
+        if (Path(repo) / p).is_file() and not repo_mod.git(["ls-files", "--", p], cwd=repo).strip():
+            raise edits.EditError(f"{p} is not tracked by git (ignored or generated), so it cannot be edited")
 
 
 def _syntax_view(repo, error):
@@ -155,6 +171,7 @@ def _syntax_stage(repo, python, run_dir, task, task_type, errors, before, result
         label = f"syntax{attempt}"
         try:
             proposal = llm.complete_json(prompts.syntax(task, files, feedback))
+            _only_tracked(repo, proposal, allowed=paths)  # the repair stays in the files that do not parse
             originals = edits.apply(repo, proposal, require_test=False)
             result["import_check"] = edits.check(repo, originals, python, run_dir)
             still = [f"{e['path']} line {e['line']}: {e['msg']}" for e in repo_mod.syntax_errors(repo) if e["path"] in paths]
@@ -289,15 +306,13 @@ def _run(repo_src, task, run_id, run_dir, workspace, result, step, done, pid, ki
     files = {p: _shown((repo / p).read_text(encoding="utf-8", errors="replace")) for p in paths}
     done(", ".join(paths))
 
-    broken = [l for l in repo_map.splitlines() if "SYNTAX ERROR" in l]
-    hint = "\n\nFiles that do not parse right now (fix these too):\n" + "\n".join(broken)
-    edit_task = task + (hint if broken else "")
     feedback = ""
     for attempt in range(result["attempts"] + 1, budget + 1):  # attempts of the syntax stage count too
         result["attempts"] = attempt
         step(f"{mode['label']} #{attempt}")
         try:
-            proposal = llm.complete_json(prompts.edit(edit_task, files, feedback, task_type))
+            proposal = llm.complete_json(prompts.edit(task, files, feedback, task_type))
+            _only_tracked(repo, proposal)
             originals = edits.apply(repo, proposal, allow_new_files=mode["new_files"])
             result["import_check"] = edits.check(repo, originals, python, run_dir)
         except (edits.EditError, ValueError) as e:

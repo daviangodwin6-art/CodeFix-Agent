@@ -120,7 +120,9 @@ def _names(src, kind):
     """(display name, branch) for a source."""
     slug = repo_mod.github_slug(_no_userinfo(src).rstrip("/")) if repo_mod.is_url(src) else None
     name = slug[1] if slug else Path(src.rstrip("/").removesuffix(".git")).name or "project"
-    branch = "codefix/" + (re.sub(r"[^a-z0-9._-]+", "-", name.lower()).strip("-.") or "project")
+    # A valid ref name: no "..", no trailing ".lock" (git refuses both).
+    slug_ = re.sub(r"\.{2,}", ".", re.sub(r"[^a-z0-9._-]+", "-", name.lower())).strip("-.").removesuffix(".lock")
+    branch = "codefix/" + (slug_ or "project")
     return ("/".join(slug) if slug and kind == "others" else name), branch
 
 
@@ -192,7 +194,7 @@ def _clean(ws, branch):
     if dirty:
         git(["reset", "-q", "--hard", "HEAD"], cwd=ws)
         git(["clean", "-fdq"], cwd=ws)
-        git(["stash", "clear"], cwd=ws)  # a crash in the middle of a reproduce step
+    git(["stash", "clear"], cwd=ws)  # a crash in the middle of a reproduce step
     if git(["branch", "--show-current"], cwd=ws).strip() != branch:
         git(["checkout", "-q", branch], cwd=ws)  # commits only ever land on the project branch
     return dirty
@@ -209,7 +211,19 @@ def open_workspace(project_id):
         set_fields(project_id, base_ref=base_ref, base_sha=base_sha)
         refresh(project_id)
         return f"workspace clean (new project on branch {p['branch']})"
+    # A run that died (server stopped) after its syntax stage committed left that unproven commit as the head.
+    # We hold the project, so any other run still marked running is dead: go back to where it started.
+    dead = db().execute("SELECT run_id, head_before FROM runs WHERE project_id=? AND status='running'"
+                        " AND head_before IS NOT NULL ORDER BY started_at, rowid", (project_id,)).fetchall()
+    if dead:
+        git(["reset", "-q", "--hard", dead[0]["head_before"]], cwd=ws)
+        with db() as con:
+            con.execute("UPDATE runs SET status='failed', finished_at=? WHERE project_id=? AND status='running'"
+                        " AND head_before IS NOT NULL", (now(), project_id))
     dirty = _clean(ws, p["branch"])
+    if dead:
+        refresh(project_id)
+        return f"workspace put back to {dead[0]['head_before'][:7]}, where interrupted run {dead[0]['run_id']} started"
     if not dirty:
         return "workspace clean"
     names = ", ".join(line[3:] for line in dirty[:3]) + (", ..." if len(dirty) > 3 else "")
@@ -395,10 +409,16 @@ def reset(project_id, to):
                                          (str(to), project_id)).fetchone():
         raise UserError("Reset goes to base or to a successful run of this project.")
     target = _target(project_id, to, p)
+    if p["base_sha"] not in git(["rev-list", target], cwd=ws, check=False).split():
+        # A sync rewrote the branch and this run's commit could not be matched to a rewritten one.
+        raise UserError("That run's commit is from before the last sync and is no longer part of the project "
+                        "branch. It is still kept under an archive tag.")
     _clean(ws, p["branch"])
     tag = _archive(ws, head(ws))
     git(["reset", "-q", "--hard", target], cwd=ws)
     git(["clean", "-fdq"], cwd=ws)
+    if p["pushed_sha"]:  # the pushed branch has commits the head no longer has: the next push must replace them
+        set_fields(project_id, force_next_push=1)
     refresh(project_id)
     log_event(project_id, "reset", f"reset to {to} ({target[:7]}); previous head kept as {tag}")
     return {"head_sha": head(ws), "archive_tag": tag}
@@ -448,7 +468,8 @@ def export(project_id, confirm=False):
         out = project_dir(project_id) / "exports"
         out.mkdir(exist_ok=True)
         path = out / f"{p['display_name']}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.patch"
-        path.write_text(git(["diff", p["base_sha"], "HEAD"], cwd=ws), encoding="utf-8", newline="\n")
+        # git writes the file itself: our text-mode capture would rewrite CRLF and non-UTF-8 bytes.
+        git(["diff", "--binary", f"--output={path}", p["base_sha"], "HEAD"], cwd=ws)
         return {"patch_path": str(path)}
     dest = Path(p["source"])
     if not dest.is_dir():

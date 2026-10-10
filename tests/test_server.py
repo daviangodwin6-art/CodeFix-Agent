@@ -234,7 +234,9 @@ def test_state_changing_requests_from_other_websites_are_refused(tmp_path):
         assert not server.foreign_origin("POST", origin)
     pytest.importorskip("httpx")
     from fastapi.testclient import TestClient
-    client = TestClient(server.app)
+    client = TestClient(server.app, base_url="http://localhost:8000")
+    # DNS rebinding: a page on another name that resolves to this machine may not even read
+    assert TestClient(server.app, base_url="http://evil.example:8000").get("/api/projects").status_code == 403
     pid = projects.ensure("local-anon", str(tmp_path), "local")["project_id"]
     for method, path in (("POST", "/api/run"), ("POST", f"/api/projects/{pid}/sync"), ("DELETE", f"/api/projects/{pid}")):
         assert client.request(method, path, headers={"origin": "https://evil.example"}).status_code == 403

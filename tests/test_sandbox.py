@@ -1,6 +1,7 @@
 """Secrets isolation: repo code (pip, pytest, probes) never sees the agent's keys or the GitHub token."""
 import ast
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -145,3 +146,34 @@ def test_repo_code_sees_no_secret_end_to_end(secrets, tmp_path, monkeypatch):
     for path in stored:
         data = path.read_bytes()
         assert KEY.encode() not in data and TOKEN.encode() not in data, path
+
+
+def test_git_in_a_workspace_runs_no_repo_hook_and_carries_no_secret(secrets, tmp_path, monkeypatch):
+    """Repo tests can write .git/hooks and .git/config; the git commands we run afterwards must not hand them our secrets."""
+    repo, dump = tmp_path / "ws", tmp_path / "hook_ran.txt"
+    repo.mkdir()
+    (repo / "a.txt").write_text("1\n")
+    repo_mod.git(["init", "-q"], cwd=repo)
+    repo_mod.commit(repo, "first")
+    for name in ("pre-commit", "post-commit", "post-checkout", "reference-transaction"):
+        hook = repo / ".git" / "hooks" / name
+        hook.write_text(f"#!/bin/sh\nenv > '{dump.as_posix()}'\n", newline="\n")
+        hook.chmod(0o755)
+    repo_mod.set_token(TOKEN)
+    try:
+        (repo / "a.txt").write_text("2\n")
+        repo_mod.commit(repo, "second")
+        (repo / "a.txt").write_text("3\n")
+        repo_mod.revert(repo)
+    finally:
+        repo_mod.set_token("")
+    assert not dump.exists()  # no hook ran
+    # and if some other planted program did run, there is nothing for it to find
+    seen = []
+    monkeypatch.setattr(sandbox, "_run", lambda cmd, cwd, timeout, env: seen.append((cmd, env)))
+    sandbox.run_trusted_git(["status"], repo, TOKEN)
+    sandbox.run_trusted_git(["push", "origin", "x"], repo, TOKEN)
+    (_, local_env), (push_cmd, push_env) = seen
+    assert "GH_TOKEN" not in local_env and KEY not in local_env.values() and TOKEN not in local_env.values()
+    assert push_env["GH_TOKEN"] == TOKEN and KEY not in push_env.values()  # the LLM key never reaches git at all
+    assert f"core.hooksPath={os.devnull}" in push_cmd
