@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { animate, utils } from "animejs";
-import { finished, isHttps, post } from "../api.js";
+import { finished } from "../api.js";
 import { CountUp, enter, pop, useAnime } from "../motion.jsx";
 import { CARD, Icon } from "./ui.jsx";
 
@@ -31,12 +31,10 @@ const BANNER = {
                 chip: "bg-amber-100 text-amber-900 border-amber-300", chipText: "RUN HALTED" },
 };
 
-function Banner({ run, onError, onPrOpened }) {
+function Banner({ run }) {
   const r = run.result;
   const b = BANNER[run.status] || BANNER.failed;
   const feature = r.task_type === "feature";
-  const pr = run.status === "success" ? r.pr : null;
-  const [opening, setOpening] = useState(false);
   const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
 
   const title = run.status === "success" ? (feature ? "Feature Added Successfully" : "Repair Completed Successfully")
@@ -45,15 +43,6 @@ function Banner({ run, onError, onPrOpened }) {
     ? "Done in " + plural(r.attempts, "attempt") + " • " + plural(r.regressions.length, "regression") + " • " + r.after.passed + " of " + r.after.total + " tests passing"
     : run.status === "env_failed" ? "The virtual environment, the dependency install or pytest itself could not run."
     : "No acceptable change after " + plural(r.attempts, "attempt") + ". Nothing was committed.";
-
-  // "Create PR" only ever acts on a click, and asks first: it notifies another person.
-  async function openPr() {
-    if (!window.confirm("Open a pull request to " + pr.repo + "?\n\nThe repository owner will be notified, under your GitHub account.")) return;
-    setOpening(true);
-    onError("");
-    try { onPrOpened((await post("/api/run/" + encodeURIComponent(run.id) + "/pr")).url); } catch (e) { onError(e.message); }
-    setOpening(false);
-  }
 
   return (
     <div className={"border rounded-xl p-3.5 shadow-2xs " + b.box}>
@@ -67,23 +56,6 @@ function Banner({ run, onError, onPrOpened }) {
         </div>
         <span className={"hidden sm:inline font-mono text-xs px-2.5 py-1 rounded font-semibold border whitespace-nowrap " + b.chip}>{b.chipText}</span>
       </div>
-      {pr && (
-        <div className="mt-3 pt-3 border-t border-emerald-200/80 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-emerald-900 min-w-0 break-words">
-            {r.pr_opened_url
-              ? <>Pull request opened: {isHttps(r.pr_opened_url)
-                  ? <a href={r.pr_opened_url} target="_blank" rel="noopener noreferrer" className="underline font-medium">{r.pr_opened_url}</a> : r.pr_opened_url}</>
-              : <>Branch <code className="font-mono font-semibold">{pr.head}</code> is ready for <code className="font-mono font-semibold">{pr.repo}</code>. Nothing is sent to the owner until you click.</>}
-          </p>
-          {!r.pr_opened_url && (
-            <button type="button" disabled={opening} onClick={openPr}
-                    className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white py-1.5 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 shadow-sm transition disabled:opacity-60">
-              <Icon name="merge" className="text-[15px]" />
-              <span>{opening ? "Opening…" : "Create PR"}</span>
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -165,7 +137,8 @@ function Quality({ run }) {
   );
 }
 
-function Changes({ r }) {
+// `r` only needs a `diff`; the project view reuses this for the cumulative diff.
+export function Changes({ r }) {
   const files = useMemo(() => parseDiff(r.diff), [r.diff]);
   const [picked, setPicked] = useState(0);
   const file = files[Math.min(picked, files.length - 1)];
@@ -243,14 +216,13 @@ function Changes({ r }) {
 function Waiting({ run, busy, steps }) {
   const working = busy || !!run;
   const current = steps.find((s) => s.status === "running");
-  const asking = run && run.status === "awaiting_approval";
   return (
     <div className={CARD + " p-8 flex flex-col items-center text-center"}>
       <div className="w-24 h-24 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
         <svg className="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 64 64" aria-hidden="true">
           <rect height="44" rx="3" strokeDasharray="2 2" width="48" x="8" y="10"></rect>
           <path d="M16 20H28M16 26H36M16 32H24" strokeLinecap="round"></path>
-          <g className={working && !asking ? "scan" : ""}>
+          <g className={working ? "scan" : ""}>
             <circle cx="40" cy="40" fill="#eff6ff" r="10"></circle>
             <path d="M47 47L55 55" strokeLinecap="round" strokeWidth="2"></path>
             <path d="M37 40H43M40 37V43" strokeLinecap="round"></path>
@@ -258,18 +230,17 @@ function Waiting({ run, busy, steps }) {
         </svg>
       </div>
       <h3 className="font-semibold text-sm text-slate-900 mt-4">
-        {asking ? "Waiting for your answer" : working ? "Agent is working" : "Ready to repair"}
+        {working ? "Agent is working" : "Ready to repair"}
       </h3>
       <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
-        {asking ? "Answer the question in Run Progress to continue the run."
-          : working ? (current ? "Current step: " + current.name : "Starting the run…")
+        {working ? (current ? "Current step: " + current.name : "Starting the run…")
           : "Choose a repository, describe the task and press Execute Repair. The result, the test comparison and the diff appear here."}
       </p>
     </div>
   );
 }
 
-export default function Results({ run, busy, steps, onError, onPrOpened }) {
+export default function Results({ run, busy, steps }) {
   const done = finished(run);
   const r = done ? run.result : null;
   const root = useRef(null);
@@ -279,10 +250,10 @@ export default function Results({ run, busy, steps, onError, onPrOpened }) {
   }, [done, run && run.id]);
 
   return (
-    <div ref={root} className="lg:col-span-5 flex flex-col gap-4 min-w-0">
+    <div ref={root} className="flex flex-col gap-4 min-w-0">
       {!r ? <Waiting run={run} busy={busy} steps={steps} /> : (
         <>
-          <Banner run={run} onError={onError} onPrOpened={onPrOpened} />
+          <Banner run={run} />
           {run.status === "success" && (
             <div className={CARD + " p-4"}>
               <div className="flex items-center gap-1.5 mb-2">
