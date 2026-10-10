@@ -137,6 +137,7 @@ def test_approval_flow_through_server(tmp_path, monkeypatch):
     bare, url, git = make_origin(tmp_path)
     monkeypatch.setattr(pipeline.repo_mod, "access", lambda src: "none")
     monkeypatch.setattr(pipeline, "RUNS_DIR", tmp_path / "runs")
+    monkeypatch.setattr(pipeline.repo_mod, "_token", "gho_" + "x" * 36)  # URL repos need a sign-in
     run_id = server.start_run({"repo": url, "task": TASK})["id"]
     deadline = time.time() + 120
     while server.get_run(run_id)["status"] != "awaiting_approval":
