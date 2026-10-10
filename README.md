@@ -21,8 +21,8 @@ Two modes, chosen with the **Debug / Add feature** toggle on the page (CLI: `--f
 - **Add feature** adds what the request describes and may create new source files. Its test is the agent's own
   reading of the request, so if the request names a function or module, the agent is told to use exactly that name.
 
-Ordinary code runs every step. The LLM is used in exactly two bounded calls (pick files, propose an
-edit) and never touches the repository directly. Code, not the prompt, enforces the two rules that
+Ordinary code runs every step. The LLM is used in bounded calls only (pick files, propose an edit, and,
+when a file does not parse, propose a syntax repair first) and never touches the repository directly. Code, not the prompt, enforces the two rules that
 cost the most points:
 
 - **Existing tests must still pass.** Every test that passed at baseline must pass after the change,
@@ -35,7 +35,7 @@ cost the most points:
 
 | Component | Use |
 | --- | --- |
-| Python 3.11+ (stdlib: `subprocess`, `venv`, `ast`, `xml.etree`) | the agent itself |
+| Python 3.12+ (stdlib: `subprocess`, `venv`, `ast`, `xml.etree`) | the agent itself |
 | Git | working copy, branch, diff, revert |
 | GitHub CLI (`gh`) and the GitHub API | check write access, list your repos, fork, open a pull request |
 | Firebase Authentication (web SDK loaded from gstatic.com) + a GitHub OAuth app | optional "Sign in with GitHub" on the page |
@@ -49,7 +49,7 @@ No datasets. No agent framework. AI coding tools were used to write this code; t
 
 ## Install
 
-Windows, Python 3.11+ and Git on PATH.
+Windows, Python 3.12+ and Git on PATH.
 
 ```
 python -m venv .venv
@@ -165,7 +165,8 @@ Every repository you run a task on becomes a **project**, kept in `projects/<pro
 
 - `workspace/`: a git working copy on branch `codefix/<name>`. Changes from earlier runs stay, and the next
   run continues from them. A successful run adds exactly one commit (`codefix: <mode>: <task> [run <id>]`);
-  any other outcome puts the head and the files back as they were.
+  any other outcome puts the head and the files back as they were. If the server is stopped in the middle
+  of a run, the next run on that project puts it back first.
 - `venv/`: the project's own environment, never shared with another project. It is reused while the
   dependency files are unchanged (`env reused`) and rebuilt otherwise (`env rebuilt (deps changed)`).
 - `runs/<run_id>/`: that run's `report.md`, state and JUnit files. The run list lives in `data/codefix.sqlite`
@@ -201,13 +202,17 @@ above). `cli.py` uses the GitHub CLI login of this PC (`gh auth login`) instead.
    the run stops as `env_failed` with the real pip output; the agent does not guess.
 4. **baseline**: full pytest run, parsed from JUnit XML into `{test id: passed|failed|error|skipped}`.
 5. **map**: every Python file with its functions and classes, built with `ast`.
+   **syntax** (only when a non-test file does not parse, `agent/pipeline.py:_syntax_stage`): no localize
+   call, the broken files are the answer. The LLM proposes a repair for those files only; code proves it
+   (the files parse, test modules import again, nothing that passed before broke) and commits it, so the
+   rest of the run works on the repaired code. A debug run ends here when no test fails afterwards and the
+   model says the task asked for nothing more. Its attempts count against `MAX_ATTEMPTS`.
 6. **localize** (LLM call 1, `agent/prompts.py`): task + map + baseline failures -> up to 5 file
    paths. Paths that do not exist are dropped.
 7. **edit** (LLM call 2): task + those files' contents (+ the previous rejection, on a retry) ->
    JSON `{explanation, edits: [{path, search, replace}], new_test: {path, content}}`.
 8. **apply + check** (`agent/edits.py`): test lock, search text must match exactly once, syntax
-   check, import existence check. Files that do not parse before the edit are listed to the model, which is told
-   to fix all their syntax errors at once.
+   check, import existence check. An edit may only touch files git tracks.
 9. **reproduce** (debug mode only): the new test runs against the original code and must fail there. A crash
    inside the repository's own code on import counts; a mistake in the test file itself does not.
    **verify**: full pytest run again, compared per test with the baseline.
@@ -237,7 +242,7 @@ code or to the model.
 | `agent/edits.py` | apply edits; test lock; syntax and import existence checks |
 | `agent/sandbox.py` | the only file that starts processes; secret-free environment for repo code |
 | `agent/llm.py` | the only file that talks to Gemini (or the fake) |
-| `agent/prompts.py` | the two prompts |
+| `agent/prompts.py` | the three prompts (localize, edit, syntax repair) |
 | `agent/report.py` | writes `report.md` |
 | `server.py`, `frontend/` | API (below) and web page |
 | `cli.py` | same pipeline from a terminal |
@@ -273,10 +278,18 @@ A project of another user answers `404`. Actions on a project answer `409` while
   agent's own. A denylist then removes anything named like a secret (`*KEY*`, `*TOKEN*`, `*SECRET*`,
   `*PASSWORD*`, `*CREDENTIAL*`, `GH_*`, `GITHUB_*`, `GEMINI_*`, `GOOGLE_*`, `OPENAI_*`, `AWS_*`, ...).
   So `GEMINI_API_KEY` and the GitHub token are not visible to repo code.
-- The GitHub token is passed only to `git` and `gh`, in the environment of that one command. It is
-  never put in a URL, a remote or a config file, and a clone whose `.git/config` contains it is refused.
+- `git` runs inside the working copy, whose `.git/` folder the repo's tests can write to. So git gets
+  the same allowlisted environment, with hooks, `core.fsmonitor` and the `ext::` transport switched off.
+- The GitHub token is passed only to `gh` and to the git commands that talk to a remote (clone, fetch,
+  push), in the environment of that one command. It is never put in a URL, a remote or a config file,
+  and a clone whose `.git/config` contains it is refused.
+- The server answers only requests addressed to `localhost` / `127.0.0.1`, and refuses state-changing
+  requests from any other web page.
 
-Residual risks, not solved here: repo code still runs as the same OS user as the agent. It can read
+Residual risks, not solved here: repo code can still plant settings in the working copy's
+`.git/config` (a diff driver, a filter, `core.sshCommand`, a rewritten remote URL). A program started
+that way sees no secrets on local git commands, but on a later fetch or push it would see the GitHub
+token. Repo code also still runs as the same OS user as the agent. It can read
 that user's files (for example `~/.git-credentials` and the `gh` config, which hold GitHub
 credentials if the PC is logged in), and it has full network access, so it could send them anywhere.
 Only run the agent on repositories you would be willing to run `pytest` on yourself. The real fix is

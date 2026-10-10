@@ -37,7 +37,7 @@ def complete(prompt):
     config = types.GenerateContentConfig(response_mime_type="application/json", temperature=0)
     last = None
     # GEMINI_MODEL may list fallbacks: "first,second". Each retry moves to the next model.
-    models = [m.strip() for m in os.getenv("GEMINI_MODEL", "gemini-3.8-flash").split(",") if m.strip()]
+    models = [m.strip() for m in os.getenv("GEMINI_MODEL", "gemini-3.7-flash").split(",") if m.strip()]
     for i, wait in enumerate((0, 5, 15, 30, 60)):  # retries for rate limits and "high demand" 503s
         time.sleep(wait)
         try:
