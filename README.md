@@ -207,6 +207,7 @@ code or to the model.
 | `agent/repo.py` | git working copy, branch, revert, commit, repo map |
 | `agent/runner.py` | venv, dependency install, pytest, JUnit parsing, regression compare |
 | `agent/edits.py` | apply edits; test lock; syntax and import existence checks |
+| `agent/sandbox.py` | the only file that starts processes; secret-free environment for repo code |
 | `agent/llm.py` | the only file that talks to Gemini (or the fake) |
 | `agent/prompts.py` | the two prompts |
 | `agent/report.py` | writes `report.md` |
@@ -214,6 +215,28 @@ code or to the model.
 | `cli.py` | same pipeline from a terminal |
 | `sample_repo/` | demo repository with a known bug |
 | `tests/` | end-to-end and safety-rule tests |
+
+## Security model and residual risks
+
+`pip install` and `pytest` execute code from the repository being repaired (`setup.py`,
+`conftest.py`, the tests). The agent treats that code as untrusted:
+
+- Every process is started by `agent/sandbox.py`; a test fails if any other file under `agent/`
+  uses `subprocess`.
+- Commands that run repo code (venv, pip, pytest, the import probe) get an environment built from a
+  short allowlist (`PATH`, temp and profile folders, Windows essentials), never a copy of the
+  agent's own. A denylist then removes anything named like a secret (`*KEY*`, `*TOKEN*`, `*SECRET*`,
+  `*PASSWORD*`, `*CREDENTIAL*`, `GH_*`, `GITHUB_*`, `GEMINI_*`, `GOOGLE_*`, `OPENAI_*`, `AWS_*`, ...).
+  So `GEMINI_API_KEY` and the GitHub token are not visible to repo code.
+- The GitHub token is passed only to `git` and `gh`, in the environment of that one command. It is
+  never put in a URL, a remote or a config file, and a clone whose `.git/config` contains it is refused.
+
+Residual risks, not solved here: repo code still runs as the same OS user as the agent. It can read
+that user's files (for example `~/.git-credentials` and the `gh` config, which hold GitHub
+credentials if the PC is logged in), and it has full network access, so it could send them anywhere.
+Only run the agent on repositories you would be willing to run `pytest` on yourself. The real fix is
+running the environment, test and edit-check steps in a container with no credentials and no
+network; that is not built.
 
 ## Scope
 

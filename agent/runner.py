@@ -1,9 +1,10 @@
 """Test environment and pytest runs. Deterministic, no LLM. A JS adapter would replace only this file."""
 import os
-import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from . import sandbox
 
 
 class EnvError(Exception):
@@ -11,11 +12,9 @@ class EnvError(Exception):
 
 
 def _run(cmd, cwd, timeout):
-    env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
     try:
-        p = subprocess.run(cmd, cwd=cwd, capture_output=True, encoding="utf-8", errors="replace",
-                           timeout=timeout, env=env)
-    except subprocess.TimeoutExpired:
+        p = sandbox.run_untrusted(cmd, cwd, timeout)  # repo code runs here: no secrets in its environment
+    except sandbox.TimeoutExpired:
         raise EnvError(f"timed out after {timeout}s: {' '.join(map(str, cmd[:4]))}")
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
