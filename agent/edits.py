@@ -1,8 +1,9 @@
 """Apply the LLM's proposal and enforce the safety rules. Rules live here, not in the prompt."""
 import ast
-import subprocess
 import sys
 from pathlib import Path
+
+from . import sandbox
 
 
 class EditError(Exception):
@@ -161,9 +162,9 @@ def check(repo, originals, python, run_dir):
                 continue
             probe = "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec(sys.argv[1]) else 1)"
             try:
-                installed = not level and subprocess.run(
-                    [str(python), "-c", probe, top], cwd=run_dir, capture_output=True, timeout=60).returncode == 0
-            except subprocess.TimeoutExpired:
+                installed = not level and sandbox.run_untrusted(
+                    [python, "-c", probe, top], run_dir, 60).returncode == 0
+            except sandbox.TimeoutExpired:
                 installed = False
             if not installed:
                 raise EditError(f"{rel}: import `{label}` does not exist in the standard library, "

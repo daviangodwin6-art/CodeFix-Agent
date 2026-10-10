@@ -5,10 +5,11 @@ import os
 import re
 import stat
 import shutil
-import subprocess
 import threading
 import time
 from pathlib import Path
+
+from . import sandbox
 
 SKIP_DIRS = {".git", ".venv", "venv", "env", "node_modules", "__pycache__", ".pytest_cache", ".tox", "build", "dist"}
 # Never let test-run leftovers into the diff, whatever the target's .gitignore says.
@@ -43,13 +44,7 @@ def _scrub(text, token):
 
 def git(args, cwd, check=True):
     token = current_token()
-    cmd = ["git", "-c", "core.autocrlf=false", "-c", "user.name=agent", "-c", "user.email=agent@localhost"]
-    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
-    if token:  # authenticate as the signed-in user: gh hands GH_TOKEN to git, nothing is stored
-        cmd += ["-c", "credential.helper=", "-c", "credential.helper=!gh auth git-credential"]
-        env["GH_TOKEN"] = token
-    p = subprocess.run(cmd + list(args), cwd=cwd, capture_output=True, encoding="utf-8", errors="replace",
-                       timeout=300, env=env)
+    p = sandbox.run_trusted_git(args, cwd, token)
     if check and p.returncode != 0:
         raise RuntimeError(_scrub(f"git {' '.join(args)} failed:\n{p.stdout}{p.stderr}", token))
     return p.stdout
@@ -64,6 +59,10 @@ def prepare(src, run_dir, run_id):
     dest = Path(run_dir) / "repo"
     if is_url(src):
         git(["clone", "--depth", "1", src, str(dest)], cwd=run_dir)
+        token = current_token()
+        # Repo code runs inside this working copy and can read .git/config: the token must not be there.
+        if token and token in (dest / ".git" / "config").read_text(encoding="utf-8", errors="replace"):
+            raise RuntimeError("the clone stored the GitHub token in .git/config; refusing to run repo code")
     else:
         if not Path(src).is_dir():
             raise RuntimeError(f"repo not found: {src}")
@@ -109,9 +108,8 @@ OUTPUT_MARKER = ".agent-output"
 def gh(args, check=True, token=None):
     """Run the GitHub CLI as the signed-in user (or `token`). Raises RuntimeError if gh is missing or (check) fails."""
     token = current_token() if token is None else token
-    env = {**os.environ, "GH_PROMPT_DISABLED": "1", **({"GH_TOKEN": token} if token else {})}
     try:
-        p = subprocess.run(["gh", *args], capture_output=True, encoding="utf-8", errors="replace", timeout=120, env=env)
+        p = sandbox.run_trusted_gh(args, token)
     except FileNotFoundError:
         raise RuntimeError("GitHub CLI (gh) is not installed")
     if check and p.returncode != 0:

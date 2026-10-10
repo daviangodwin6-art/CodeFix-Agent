@@ -1,0 +1,12 @@
+{
+  "localize": {"files": ["calc.py"]},
+  "edit": {
+    "explanation": "Adds double(x) in a new module with a test.",
+    "edits": [],
+    "new_files": [{"path": "extra.py", "content": "def double(x):\n    return x * 2\n"}],
+    "new_test": {
+      "path": "tests/test_extra.py",
+      "content": "import pytest\n\nfrom extra import double\n\n\ndef test_double():\n    assert double(2) == pytest.approx(4)\n"
+    }
+  }
+}

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 import server
 from agent import pipeline
 from agent import repo as repo_mod
+from agent import sandbox
 
 MINE = "https://github.com/me/mine"
 THEIRS = "https://github.com/them/theirs"
@@ -179,14 +180,14 @@ def signed_out():
 
 
 def captured_env(monkeypatch):
-    """Record the command and environment of every subprocess repo.py starts."""
+    """Record the command and environment of every subprocess repo.py starts (through agent/sandbox.py)."""
     seen = []
 
     def run(cmd, **kw):
         seen.append((cmd, kw["env"]))
         return types.SimpleNamespace(returncode=1, stdout="", stderr=f"fatal: bad credentials {TOKEN}")
 
-    monkeypatch.setattr(repo_mod.subprocess, "run", run)
+    monkeypatch.setattr(sandbox.subprocess, "run", run)
     return seen
 
 
