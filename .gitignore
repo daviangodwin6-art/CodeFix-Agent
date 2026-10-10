@@ -1,5 +1,7 @@
 .env
 runs/
+data/
+projects/
 .venv/
 __pycache__/
 .pytest_cache/

@@ -68,6 +68,8 @@ Edit `.env` (it is gitignored; never commit it):
 | `LLM_PROVIDER` | `gemini`, or `fake` for scripted offline responses (works only on `sample_repo`) |
 | `MAX_ATTEMPTS` | edit retry cap (default 5) |
 | `TEST_TIMEOUT` | seconds before a test run is killed (default 300) |
+| `MAX_CACHED_VENVS` | how many project environments are kept (default 10); beyond that the least recently used idle one is deleted and rebuilt on its next run |
+| `CODEFIX_HOME` | where `projects/` and `data/` are kept (default: this folder) |
 
 ## Run
 
@@ -91,9 +93,13 @@ Command line:
 ```
 .venv\Scripts\python cli.py sample_repo "login fails when the email has capital letters"
 .venv\Scripts\python cli.py https://github.com/someone/somerepo.git "describe the bug or feature"
+.venv\Scripts\python cli.py --sync --reset-to base sample_repo
 ```
 
-Our own tests (offline, fake LLM, about 2 minutes because each builds a real venv):
+`--feature` marks the task as a feature request, `--sync` rebases the project onto its upstream default
+branch first, `--reset-to <base|run_id>` first moves the project head (the old head is kept as a tag).
+
+Our own tests (offline, fake LLM, about 4 minutes; only the tests marked `real_env` build a real venv):
 
 ```
 .venv\Scripts\python -m pytest tests -q
@@ -129,17 +135,17 @@ and do not cover the bug.
 - repo: `sample_repo`
 - task: `login fails when the email has capital letters`
 
-**Output** (`runs/<id>/report.md`, also shown in the CLI and web page)
+**Output** (`projects/<project_id>/runs/<run_id>/report.md`, also shown in the CLI and web page)
 
 ```
-[ ok] prepare: working copy on branch agent/8aa786d6
-[ ok] environment: venv ready
+[ ok] prepare: workspace clean (new project on branch codefix/sample_repo)
+[ ok] environment: env rebuilt (first run)
 [ ok] baseline: 6 passed, 0 failed, 6 total
 [ ok] map: 5 Python files
 [ ok] localize: auth/login.py, auth/users.py, tests/test_login.py
 [ ok] edit #1: 2 files written, imports verified
 [ ok] verify #1: 7 passed, 0 failed, 0 regressions
-[ ok] report: runs\8aa786d6\report.md
+[ ok] commit to project: 3f2a9c1 on codefix/sample_repo
 
 STATUS: success
 baseline: 6 passed, 0 failed, 6 total
@@ -151,29 +157,48 @@ regressions: 0  new tests: 1  attempts: 1
 +    user = get_user(email.strip().lower())
 ```
 
-plus one new file, `tests/test_login_email_case.py`. Your checked-out files are not modified. The change is committed on branch `agent/<id>` inside
-`runs/<id>/repo` and published as branch `agent-changes`. On the web page you choose whose repository it is:
+plus one new file, `tests/test_login_email_case.py`.
 
-- **My GitHub repo** (picked from a list of your repositories): the branch is created in that repository and
-  the fix is committed to it.
-- **Someone else's public repo**: the repository is forked to your account and the fix is committed to the fork.
-  The owner hears nothing unless you click **Open pull request**, which asks for confirmation first.
-- **Local folder**: if it is a git repository the branch is created in it (`git diff HEAD...agent-changes`).
+## Projects
 
-GitHub actions run as whoever is signed in: the page shows the account. The page starts signed out and only
-local folders work until someone clicks **Sign in with GitHub** (setup below). `cli.py` uses the GitHub CLI
-login of this PC (`gh auth login`) instead.
-Every GitHub run also saves a full project copy on branch `agent-changes` to `D:\Hacknex\agent_output\<repo>`
-(change with `AGENT_OUTPUT_DIR`), with a `CHANGES.md`. From the CLI there is no mode picker: it checks your
-access and asks (or use `--fork` / `--local`).
+Every repository you run a task on becomes a **project**, kept in `projects/<project_id>/`:
+
+- `workspace/`: a git working copy on branch `codefix/<name>`. Changes from earlier runs stay, and the next
+  run continues from them. A successful run adds exactly one commit (`codefix: <mode>: <task> [run <id>]`);
+  any other outcome puts the head and the files back as they were.
+- `venv/`: the project's own environment, never shared with another project. It is reused while the
+  dependency files are unchanged (`env reused`) and rebuilt otherwise (`env rebuilt (deps changed)`).
+- `runs/<run_id>/`: that run's `report.md`, state and JUnit files. The run list lives in `data/codefix.sqlite`
+  (metadata only: no tokens, keys or file contents) and survives a restart.
+
+A test added by a successful run is an existing, locked test for every later run and part of its baseline,
+so earlier fixes stay protected. One run at a time per project; different projects run side by side.
+
+On the web page you choose whose repository it is:
+
+- **My GitHub repo** (picked from a list of your repositories) and **Someone else's public repo**: the
+  repository is cloned into the project. Nothing is pushed by a run. **Open pull request** pushes the project
+  branch (to the repository, or to a fork in your account when you cannot write to it) and opens one pull
+  request per project, which later pushes update.
+- **Local folder**: a snapshot is used. Your folder is never modified, unless you choose **Export** and
+  confirm writing the changes back; by default Export writes a `.patch` file to `projects/<id>/exports/`.
+
+Per project you can also **reset** to the base or to an earlier successful run (the current head is first
+tagged `codefix/archive/<time>`, so nothing is lost) and **sync** with upstream (a rebase onto the latest
+default branch; on a conflict it is aborted, nothing changes, and the conflicting files are listed).
+
+GitHub actions run as whoever is signed in: the page shows the account, and projects belong to that account.
+The page starts signed out and only local folders work until someone clicks **Sign in with GitHub** (setup
+above). `cli.py` uses the GitHub CLI login of this PC (`gh auth login`) instead.
 
 ## Data pipeline
 
 1. **Input**: repository (local folder or git URL) and task text, from the web form or the CLI.
-2. **prepare** (`agent/repo.py`): copy or clone into `runs/<id>/repo`, create branch `agent/<id>`.
-3. **environment** (`agent/runner.py`): fresh venv in `runs/<id>/venv`, install pytest and the
-   repository's `requirements.txt` / package. If this fails the run stops as `env_failed` with the
-   real pip output; the agent does not guess.
+2. **prepare** (`agent/projects.py`, `agent/repo.py`): first run: copy or clone into the project's
+   `workspace/` and create branch `codefix/<name>`. Later runs: make sure the workspace is clean.
+3. **environment** (`agent/envmgr.py`, `agent/runner.py`): reuse the project's venv, or rebuild it (`uv` if
+   installed, else `pip`) with pytest and the repository's `requirements.txt` / package. If this fails
+   the run stops as `env_failed` with the real pip output; the agent does not guess.
 4. **baseline**: full pytest run, parsed from JUnit XML into `{test id: passed|failed|error|skipped}`.
 5. **map**: every Python file with its functions and classes, built with `ast`.
 6. **localize** (LLM call 1, `agent/prompts.py`): task + map + baseline failures -> up to 5 file
@@ -187,9 +212,10 @@ access and asks (or use `--fork` / `--local`).
    inside the repository's own code on import counts; a mistake in the test file itself does not.
    **verify**: full pytest run again, compared per test with the baseline.
 10. **decide** (`agent/pipeline.py`): any rule violation, regression, or failing new test -> `git`
-    revert, and the error text goes back into step 7 (at most `MAX_ATTEMPTS` times). Otherwise commit.
-11. **report** (`agent/report.py`): `runs/<id>/report.md` with the explanation, before/after table,
-    regressions, new tests, verified imports, steps and diff.
+    revert, and the error text goes back into step 7 (at most `MAX_ATTEMPTS` times).
+11. **commit to project**: one commit on the project branch, or the head put back if the run did not
+    succeed. `agent/report.py` writes `report.md` either way: explanation, before/after table,
+    regressions, new tests, verified imports, steps with timings, and the diff.
 
 ## Core reasoning mechanism
 
@@ -204,17 +230,36 @@ code or to the model.
 | Path | Role |
 | --- | --- |
 | `agent/pipeline.py` | the whole flow in one file: step order, retry loop, revert rule |
-| `agent/repo.py` | git working copy, branch, revert, commit, repo map |
-| `agent/runner.py` | venv, dependency install, pytest, JUnit parsing, regression compare |
+| `agent/projects.py` | projects: identity, database, one-run-at-a-time lock, workspace, reset, sync, export, pull request |
+| `agent/envmgr.py` | one venv per project: dependency hash, reuse or rebuild, eviction |
+| `agent/repo.py` | git: clone or snapshot, revert, commit, push, repo map |
+| `agent/runner.py` | venv build, dependency install, pytest, JUnit parsing, regression compare |
 | `agent/edits.py` | apply edits; test lock; syntax and import existence checks |
 | `agent/sandbox.py` | the only file that starts processes; secret-free environment for repo code |
 | `agent/llm.py` | the only file that talks to Gemini (or the fake) |
 | `agent/prompts.py` | the two prompts |
 | `agent/report.py` | writes `report.md` |
-| `server.py`, `frontend/` | API (`POST /api/run`, `GET /api/run/{id}`) and web page |
+| `server.py`, `frontend/` | API (below) and web page |
 | `cli.py` | same pipeline from a terminal |
 | `sample_repo/` | demo repository with a known bug |
 | `tests/` | end-to-end and safety-rule tests |
+
+### API
+
+| Request | Does |
+| --- | --- |
+| `POST /api/run` | start a run on the repository's project; `409` if that project is busy |
+| `GET /api/run/{id}` | state of a run (live, or stored) |
+| `GET /api/projects`, `GET /api/projects/{id}` | your projects; one project with base and archive tags |
+| `GET /api/projects/{id}/runs`, `.../runs/{run_id}` | run history, newest first; one stored run with step timings |
+| `GET /api/projects/{id}/diff?from=base\|<run_id>` | changes from the base, or since that run, up to the head |
+| `POST /api/projects/{id}/reset` `{to}` | move the head to `base` or a run; returns the archive tag |
+| `POST /api/projects/{id}/sync` | rebase onto upstream: `ok`, `conflict` (+ files) or `not_applicable` |
+| `POST /api/projects/{id}/export` `{confirm}` | local projects: patch file, or write into the folder with `confirm: true` |
+| `POST /api/projects/{id}/pr` | push the project branch, open or reuse the project's pull request |
+| `DELETE /api/projects/{id}/venv`, `DELETE /api/projects/{id}` | delete the environment; delete the project |
+
+A project of another user answers `404`. Actions on a project answer `409` while a run is going on it.
 
 ## Security model and residual risks
 
@@ -240,15 +285,16 @@ network; that is not built.
 
 ## Scope
 
-**Minimum viable solution (built):** Python + pytest repositories; plain-text tasks; working copy on
-a new branch; baseline vs after comparison per test; locked existing tests; new test in a new file;
+**Minimum viable solution (built):** Python + pytest repositories; plain-text tasks; persistent projects
+(workspace on its own branch, own environment, run history); baseline vs after comparison per test; locked existing tests; new test in a new file;
 import existence check; retry cap with revert; `env_failed` / `failed` outcomes that never leave a
 half-applied change; CLI, API, web page, report file; fake LLM mode.
 
 **Known limits:** the import check covers imports, not every attribute or function call (the full
 test run catches most invented calls at runtime). Tests are run once, so a flaky test can look like a
 regression. A repository with no tests has no baseline; the report says so. Local repositories are
-snapshotted without their git history.
+snapshotted without their git history. The one-run-per-project lock lives in the server process, so do
+not run `cli.py` and the server on the same project at the same moment.
 
 **Known limit of Add feature:** hidden tests may expect names or signatures the request did not spell out; the agent can only follow what the request says.
 

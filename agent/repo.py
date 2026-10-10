@@ -54,15 +54,25 @@ def is_url(src):
     return src.startswith(("http://", "https://", "git@", "file://")) or src.endswith(".git")
 
 
-def prepare(src, run_dir, run_id):
-    """Copy or clone src to run_dir/repo on a new branch. The original is never touched."""
-    dest = Path(run_dir) / "repo"
+def default_branch(clone):
+    base = git(["rev-parse", "--abbrev-ref", "origin/HEAD"], cwd=clone, check=False).strip()
+    return base.removeprefix("origin/") if base and base != "origin/HEAD" else "main"
+
+
+def prepare(src, dest, branch):
+    """Create a project workspace at dest: clone src (URL) or snapshot it (folder), then start `branch`.
+
+    The original is never touched. Returns (base_ref, base_sha): where the project started from.
+    """
+    dest = Path(dest)
     if is_url(src):
-        git(["clone", "--depth", "1", src, str(dest)], cwd=run_dir)
+        # Full clone, not --depth 1: the workspace is kept, and sync later rebases onto new upstream commits.
+        git(["clone", "-q", src, str(dest)], cwd=dest.parent)
         token = current_token()
         # Repo code runs inside this working copy and can read .git/config: the token must not be there.
         if token and token in (dest / ".git" / "config").read_text(encoding="utf-8", errors="replace"):
             raise RuntimeError("the clone stored the GitHub token in .git/config; refusing to run repo code")
+        base_ref = default_branch(dest)
     else:
         if not Path(src).is_dir():
             raise RuntimeError(f"repo not found: {src}")
@@ -70,12 +80,12 @@ def prepare(src, run_dir, run_id):
         shutil.copytree(src, dest, ignore=shutil.ignore_patterns(*SKIP_DIRS))
         git(["init", "-q"], cwd=dest)
         git(["add", "-A"], cwd=dest)
-        git(["commit", "-q", "--allow-empty", "-m", "baseline snapshot"], cwd=dest)
+        git(["commit", "-q", "--allow-empty", "-m", f"snapshot of {src}"], cwd=dest)
+        base_ref = git(["branch", "--show-current"], cwd=dest).strip()
     (dest / ".git" / "info").mkdir(exist_ok=True)
     (dest / ".git" / "info" / "exclude").write_text(EXCLUDES, encoding="utf-8")
-    branch = f"agent/{run_id}"
     git(["checkout", "-q", "-b", branch], cwd=dest)
-    return dest, branch
+    return base_ref, git(["rev-parse", "HEAD"], cwd=dest).strip()
 
 
 def revert(repo):
@@ -99,10 +109,6 @@ def commit(repo, message):
     files = git(["diff", "--cached", "--name-only"], cwd=repo).split()
     git(["commit", "-q", "-m", message], cwd=repo)
     return diff, files
-
-
-PUBLISH_BRANCH = "agent-changes"
-OUTPUT_MARKER = ".agent-output"
 
 
 def gh(args, check=True, token=None):
@@ -149,32 +155,6 @@ def _why(e):
     return " | ".join(lines)[:400] or str(e)[-300:]
 
 
-def _commit_on_branch(root, clone, files, message, work, new_from=None):
-    """Copy the changed files onto branch `agent-changes` in repo `root` via a temporary worktree."""
-    args = ["-b", PUBLISH_BRANCH, new_from] if new_from else [PUBLISH_BRANCH]
-    git(["worktree", "add", "-q", str(work), *args], cwd=root)
-    try:
-        for rel in files:
-            (work / rel).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(Path(clone) / rel, work / rel)
-        git(["add", "-A"], cwd=work)
-        if git(["status", "--porcelain"], cwd=work).strip():  # a repeat of an identical change adds nothing
-            git(["commit", "-q", "-m", message], cwd=work)
-    finally:
-        git(["worktree", "remove", "--force", str(work)], cwd=root, check=False)
-
-
-def _stack_and_push(clone, remote, files, message, work):
-    """Build `agent-changes` on top of the remote's existing one (if any) and push it. Never forced."""
-    # ponytail: shallow fetch of the existing branch; later runs stack on it instead of diverging
-    git(["fetch", "--depth=1", remote, f"+{PUBLISH_BRANCH}:refs/heads/{PUBLISH_BRANCH}"], cwd=clone, check=False)
-    if git(["rev-parse", "--verify", "-q", PUBLISH_BRANCH], cwd=clone, check=False).strip():
-        _commit_on_branch(clone, clone, files, message, work)
-    else:
-        git(["branch", "-f", PUBLISH_BRANCH, "HEAD"], cwd=clone)
-    git(["push", remote, PUBLISH_BRANCH], cwd=clone)
-
-
 def whoami(token=None):
     """GitHub login of the signed-in user (or of `token`), or "" if there is none or it is not valid."""
     try:
@@ -190,7 +170,7 @@ def my_repos():
 
 
 def open_pr(pr, title, body):
-    """Open the pull request described by publish()'s "pr". Returns its URL (the existing one if already open)."""
+    """Open the pull request described by publish()'s result. Returns its URL (the existing one if already open)."""
     p = gh(["pr", "create", "--repo", pr["repo"], "--head", pr["head"], "--base", pr["base"],
             "--title", title, "--body", body], check=False)
     found = re.search(r"https://github\.com/\S+/pull/\d+", p.stdout + p.stderr)
@@ -206,104 +186,34 @@ def _rmtree(path):
     shutil.rmtree(path, onexc=retry)
 
 
-def export_local(clone, name, task, result):
-    """Copy the finished project (git repo on branch agent-changes) to AGENT_OUTPUT_DIR/<name>. Returns the path."""
-    base = Path(os.getenv("AGENT_OUTPUT_DIR", r"D:\Hacknex\agent_output"))
-    base.mkdir(parents=True, exist_ok=True)
-    dest, n = base / name, 1
-    while dest.exists():
-        if (dest / OUTPUT_MARKER).exists():  # our own earlier export: replace it
-            _rmtree(dest)
-            break
-        n += 1  # a folder we did not create is never touched
-        dest = base / f"{name}-{n}"
-    shutil.copytree(clone, dest)
-    git(["checkout", "-q", PUBLISH_BRANCH], cwd=dest)
-    (dest / OUTPUT_MARKER).write_text("created by the agent; safe to replace on the next run\n", encoding="utf-8")
-    b, a = result["baseline"], result["after"]
-    (dest / "CHANGES.md").write_text(
-        f"# {task}\n\n{result['explanation']}\n\n"
-        f"Tests before: {b['passed']} passed / {b['total']} total. After: {a['passed']} passed / {a['total']} total. "
-        f"Regressions: {len(result['regressions'])}.\n\nBranch: `{PUBLISH_BRANCH}`\n\n```diff\n{result['diff']}```\n",
-        encoding="utf-8")
-    with open(dest / ".git" / "info" / "exclude", "a", encoding="utf-8") as f:
-        f.write(f"{OUTPUT_MARKER}\nCHANGES.md\n")
-    return str(dest)
+def publish(src, clone, branch, kind, lease=None):
+    """Push the project branch and return what open_pr() needs: {"repo", "head", "base"} ("repo" is None off GitHub).
 
-
-def publish(src, clone, files, task, run_dir, choice, result):
-    """Put the committed change on branch `agent-changes`. Returns {"note", "pr_url", "output_path", "pr"}; "pr" is what open_pr() needs, or None.
-
-    choice "own": local git repo; branch created or extended in the user's own repo through a temporary
-        worktree, so their checked-out files are never touched.
-    choice "origin": git URL with write access; branch pushed to origin (only that branch, never forced).
-    choice "fork": no write access; fork to the user's account (gh), push the branch there, give a PR link.
-    choice "local": no GitHub write at all. URL runs are always also exported to AGENT_OUTPUT_DIR/<repo-name>.
+    kind "mine": pushed to origin. kind "others": no write access, so the repo is forked to the user's
+    account (gh) and the branch is pushed there.
+    lease: the commit the remote branch is expected to hold. Given only when a sync rebased commits that
+    were already pushed; that one push uses --force-with-lease. Every other push is a plain one, never forced.
     """
-    message = f"agent: {task[:60]}"
-    work = Path(run_dir) / "publish"
-    out = {"note": "", "pr_url": "", "output_path": "", "pr": None}
-    if choice == "own":
-        src = Path(src).resolve()
-        top = git(["rev-parse", "--show-toplevel"], cwd=src, check=False).strip()
-        if not top or Path(top).resolve() != src:
-            out["note"] = (f"{src} is not the root of a git repository, so no `{PUBLISH_BRANCH}` branch was "
-                           f"created. The change is committed in {clone}")
-            return out
-        # ponytail: copies the changed files over the branch tip (no 3-way merge); fine because the agent
-        # only adds/edits files. Revisit if runs on a branch with divergent edits to the same file matter.
-        exists = git(["rev-parse", "--verify", "-q", PUBLISH_BRANCH], cwd=src, check=False).strip()
-        _commit_on_branch(src, clone, files, message, work, None if exists else "HEAD")
-        out["note"] = f"Committed to branch `{PUBLISH_BRANCH}` in {src}. Review: git diff HEAD...{PUBLISH_BRANCH}"
-        return out
-
     slug = github_slug(src)
-    name = slug[1] if slug else Path(src.removesuffix(".git").rstrip("/")).name or "repo"
-    notes = []
-    base = git(["rev-parse", "--abbrev-ref", "origin/HEAD"], cwd=clone, check=False).strip()
-    base = base.removeprefix("origin/") if base and base != "origin/HEAD" else "main"
-    if choice == "origin":
-        try:
-            _stack_and_push(clone, "origin", files, message, work)
-            web = src.removesuffix(".git") if src.startswith("https://") else src
-            out["pr_url"] = f"{web}/compare/{PUBLISH_BRANCH}"
-            if slug:
-                out["pr"] = {"repo": "/".join(slug), "head": PUBLISH_BRANCH, "base": base}
-            notes.append(f"Pushed branch `{PUBLISH_BRANCH}` to {src}.")
-        except RuntimeError as e:
-            notes.append(f"Push to {src} failed (needs git credentials with write access): {_why(e)}\n"
-                         f'Retry with: git -C "{clone}" push origin {PUBLISH_BRANCH}')
-    elif choice == "fork":
-        try:
-            # POST .../forks is idempotent and returns the fork's real name (GitHub renames on a clash).
-            full = gh(["api", "-X", "POST", f"repos/{slug[0]}/{slug[1]}/forks", "--jq", ".full_name"]).stdout.strip()
-            fork = f"https://github.com/{full}.git"
-            for attempt in range(4):  # a brand-new fork takes a few seconds to become pushable
-                try:
-                    _stack_and_push(clone, fork, files, message, work)
-                    break
-                except RuntimeError:
-                    if attempt == 3:
-                        raise
-                    time.sleep(5)
-            head = f"{full.split('/')[0]}:{PUBLISH_BRANCH}"
-            out["pr_url"] = f"https://github.com/{slug[0]}/{slug[1]}/compare/{base}...{head}"
-            out["pr"] = {"repo": "/".join(slug), "head": head, "base": base}
-            notes.append(f"Forked to {full} and committed to branch `{PUBLISH_BRANCH}` there. "
-                         "The owner is not notified until a pull request is opened.")
-        except RuntimeError as e:
-            git(["branch", "-f", PUBLISH_BRANCH, "HEAD"], cwd=clone, check=False)  # keep the local export usable
-            notes.append(f"Fork or push failed: {_why(e)}")
-    else:
-        git(["branch", "-f", PUBLISH_BRANCH, "HEAD"], cwd=clone)
-        notes.append("Not pushed to GitHub (you chose local only).")
+    force = [f"--force-with-lease={branch}:{lease}"] if lease else []
+    out = {"repo": "/".join(slug) if slug else None, "head": branch, "base": default_branch(clone)}
     try:
-        out["output_path"] = export_local(clone, name, task, result)
-        notes.append(f"Full project with the change saved to {out['output_path']} (branch `{PUBLISH_BRANCH}`).")
-    except Exception as e:
-        notes.append(f"Could not save the local folder: {e}. The change is committed in {clone}")
-    out["note"] = "\n".join(notes)
-    return out
+        if kind != "others":
+            git(["push", *force, "origin", branch], cwd=clone)
+            return out
+        # POST .../forks is idempotent and returns the fork's real name (GitHub renames on a clash).
+        full = gh(["api", "-X", "POST", f"repos/{slug[0]}/{slug[1]}/forks", "--jq", ".full_name"]).stdout.strip()
+        for attempt in range(4):  # a brand-new fork takes a few seconds to become pushable
+            try:
+                git(["push", *force, f"https://github.com/{full}.git", branch], cwd=clone)
+                break
+            except RuntimeError:
+                if attempt == 3:
+                    raise
+                time.sleep(5)
+    except RuntimeError as e:
+        raise RuntimeError(f"push failed: {_why(e)}")
+    return {**out, "head": f"{full.split('/')[0]}:{branch}"}
 
 
 def py_files(repo):
@@ -313,13 +223,27 @@ def py_files(repo):
             yield p
 
 
+def _parse(path):
+    """(tree, None), or (None, the SyntaxError). Parsing only: nothing from the repo is executed."""
+    try:
+        return ast.parse(path.read_text(encoding="utf-8", errors="replace")), None
+    except SyntaxError as e:
+        return None, e
+
+
+def syntax_errors(repo):
+    """[{"path", "line", "col", "msg"}] for every Python file that does not parse."""
+    repo = Path(repo)
+    return [{"path": p.relative_to(repo).as_posix(), "line": e.lineno or 1, "col": e.offset or 0, "msg": e.msg}
+            for p in py_files(repo) for e in [_parse(p)[1]] if e]
+
+
 def repo_map(repo, cap=12000):
     """One line per Python file: path and its top-level functions/classes (with methods)."""
     lines = []
     for p in py_files(repo):
-        try:
-            tree = ast.parse(p.read_text(encoding="utf-8", errors="replace"))
-        except SyntaxError as e:
+        tree, e = _parse(p)
+        if e:
             # A file that does not parse is often the very bug to fix; show it, don't hide it.
             lines.append(f"{p.relative_to(repo).as_posix()}: SYNTAX ERROR line {e.lineno}: {e.msg}")
             continue

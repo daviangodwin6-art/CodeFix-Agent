@@ -106,10 +106,11 @@ def test_clone_that_stores_the_token_is_refused(secrets, tmp_path, monkeypatch):
 
     monkeypatch.setattr(repo_mod, "git", fake_git)
     with pytest.raises(RuntimeError) as e:
-        repo_mod.prepare("https://github.com/a/b", tmp_path, "r1")
+        repo_mod.prepare("https://github.com/a/b", tmp_path / "workspace", "codefix/b")
     assert ".git/config" in str(e.value) and TOKEN not in str(e.value)
 
 
+@pytest.mark.real_env  # the real venv build (pip) is one of the places repo code runs
 def test_repo_code_sees_no_secret_end_to_end(secrets, tmp_path, monkeypatch):
     """Clone a repo whose conftest.py and test dump os.environ and .git/config, run the whole pipeline, read the dump."""
     monkeypatch.setenv("LLM_PROVIDER", "fake")
@@ -124,7 +125,7 @@ def test_repo_code_sees_no_secret_end_to_end(secrets, tmp_path, monkeypatch):
     git(seed, "init", "-q", "-b", "main"), git(seed, "add", "-A"), git(seed, "commit", "-q", "-m", "init")
     git(tmp_path, "clone", "-q", "--bare", str(seed), str(bare))
 
-    state = pipeline.run(bare.as_uri(), "add double(x)", runs_dir=tmp_path / "runs", run_id="leak", task_type="feature")
+    state = pipeline.run(bare.as_uri(), "add double(x)", run_id="leak", task_type="feature")
     assert state["status"] == "success", state["result"]["error"]
     assert "pytest (installed package)" in state["result"]["import_check"]  # the venv probe ran too
 
@@ -135,4 +136,12 @@ def test_repo_code_sees_no_secret_end_to_end(secrets, tmp_path, monkeypatch):
         assert "origin" in seen["git_config"]  # it really read the clone's config
         assert seen["env"]["PYTHONDONTWRITEBYTECODE"] == "1" and seen["env"]["PIP_NO_INPUT"] == "1"
         assert not [k for k in seen["env"] if sandbox._denied(k)]
-    assert TOKEN not in (tmp_path / "runs" / "leak" / "repo" / ".git" / "config").read_text(encoding="utf-8")
+    home = tmp_path / "codefix_home"
+    assert TOKEN not in (home / "projects" / state["project_id"] / "workspace" / ".git" / "config").read_text(encoding="utf-8")
+    # nor in anything the run stored: the database, the run state, the report, the venv marker
+    stored = [p for p in home.rglob("*") if p.is_file() and "workspace" not in p.parts and "site-packages" not in p.parts
+              and p.suffix not in (".exe", ".pyd", ".dll", ".so")]
+    assert any(p.name == "codefix.sqlite" for p in stored) and any(p.name == "state.json" for p in stored)
+    for path in stored:
+        data = path.read_bytes()
+        assert KEY.encode() not in data and TOKEN.encode() not in data, path
