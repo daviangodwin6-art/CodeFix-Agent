@@ -35,6 +35,7 @@ def test_login_case(tmp_path):
     assert [s["name"] for s in state["steps"]][-4:] == ["edit #1", "reproduce #1", "verify #1", "report"]
     assert r["task_type"] == "debug" and r["reproduced"] is True  # the new test failed on the unfixed code
     assert r["regressions"] == []
+    assert r["syntax"] is None and "syntax" not in [s["name"] for s in state["steps"]]  # everything parses: no syntax stage
     assert r["baseline"] == {"passed": 6, "failed": 0, "total": 6}
     assert r["after"] == {"passed": 7, "failed": 0, "total": 7}
     assert len(r["new_tests"]) == 1

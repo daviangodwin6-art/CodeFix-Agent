@@ -5,17 +5,30 @@ from pathlib import Path
 def write(state, task, repo_src):
     r = state["result"]
     bullets = lambda items: "\n".join(f"- `{i}`" for i in items) or "- none"
+    syntax = r.get("syntax")
+    # A run that only repaired syntax has no fail-first test: "no" would read as a proof that failed.
+    reproduced = ('n/a' if r.get('task_type') == 'feature' else
+                  'n/a (syntax repair only: the proof is that the files parse and the tests pass)'
+                  if syntax and syntax["only_syntax"] else 'yes' if r.get('reproduced') else 'no')
+    stage = "" if not syntax else f"""
+## Syntax stage
+Ran before the task itself, because these files did not parse. Attempts used: {syntax['attempts']}.
+{'The task asked for nothing else, so the run ended here.' if syntax['only_syntax'] else 'The rest of the run worked on the repaired code.'}
+
+| File | Before | After |
+| --- | --- | --- |
+""" + "\n".join(f"| `{f['path']}` | line {f['line']}: {f['msg']} | {f['after']} |" for f in syntax["files"]) + "\n"
     text = f"""# Agent run {state['id']}: {state['status'].upper()}
 
 **Repository:** `{repo_src}`
 **Branch:** `{r['branch']}`
 **Attempts:** {r['attempts']}
 **Mode:** {'add feature' if r.get('task_type') == 'feature' else 'debug'}
-**Bug reproduced before the fix (new test failed on the original code):** {'n/a' if r.get('task_type') == 'feature' else 'yes' if r.get('reproduced') else 'no'}
+**Bug reproduced before the fix (new test failed on the original code):** {reproduced}
 
 ## Task
 {task}
-
+{stage}
 ## Explanation
 {r['explanation'] or '(none)'}
 

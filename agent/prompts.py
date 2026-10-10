@@ -89,6 +89,34 @@ RULES = """- "search" must be copied character for character from the file shown
 
 EDIT = {"debug": EDIT_DEBUG + RULES, "feature": EDIT_FEATURE + RULES}
 
+SYNTAX = """STEP: syntax
+You are a careful software engineer working on an existing Python repository.
+The files below do not parse, so nothing that imports them can run. Make every one of them parse
+again and change nothing else. Do NOT carry out the task here: it is handled in a later step, on the
+repaired code. It is shown only so you can answer "remaining_task".
+
+TASK (context only):
+{task}
+
+FILES THAT DO NOT PARSE:
+{files}
+
+{feedback}
+Return JSON:
+{{"explanation": "what stopped each file from parsing and what you changed, 1-3 sentences",
+  "edits": [{{"path": "file to change", "search": "exact text to find", "replace": "new text"}}],
+  "remaining_task": true or false,
+  "new_test": {{"path": "tests dir/test_<something new>.py", "content": "full file content"}}}}
+
+Rules (checked by code; a violation rejects the whole attempt):
+- Every file listed above must parse after your edits, and no test module may fail to import because
+  of them.
+- "remaining_task": false only if the task asks for nothing beyond making these files parse. If it
+  also describes wrong behaviour or asks for something new, or you are not sure, answer true.
+- "new_test" is optional here: leave it out unless it adds something. If you give one, it must pass.
+- Do not create new source files.
+""" + RULES
+
 
 def localize(task, repo_map, failures, task_type="debug"):
     goal, focus = {"debug": ("BUG REPORT", "that need to change"),
@@ -96,8 +124,17 @@ def localize(task, repo_map, failures, task_type="debug"):
     return LOCALIZE.format(goal=goal, focus=focus, task=task, repo_map=repo_map, failures=failures or "(none)")
 
 
-def edit(task, files, feedback, task_type="debug"):
+def _fill(template, task, files, feedback):
     blocks = "\n\n".join(f"=== {path} ===\n{content}" for path, content in files.items())
     if feedback:
         feedback = f"YOUR PREVIOUS ATTEMPT WAS REJECTED AND REVERTED. Fix this:\n{feedback}\n"
-    return EDIT[task_type].format(task=task, files=blocks, feedback=feedback)
+    return template.format(task=task, files=blocks, feedback=feedback)
+
+
+def edit(task, files, feedback, task_type="debug"):
+    return _fill(EDIT[task_type], task, files, feedback)
+
+
+def syntax(task, files, feedback):
+    """files: {path: the error, the lines around it and, if it fits, the whole file}."""
+    return _fill(SYNTAX, task, files, feedback)

@@ -25,16 +25,18 @@ def _inside(repo, rel):
     return target
 
 
-def apply(repo, proposal, allow_new_files=False):
+def apply(repo, proposal, allow_new_files=False, require_test=True):
     """Write the edits, new source files (feature mode only) and the new test.
 
+    require_test=False is for the syntax stage only: there the new test may be left out.
     Returns {path: original text, or None for a new file}.
     """
     try:
-        new_test = proposal["new_test"]
+        new_test = proposal["new_test"] if require_test else proposal.get("new_test")
         steps = [(e["path"], e["search"], e["replace"]) for e in proposal.get("edits") or []]
         created = [(f["path"], f["content"]) for f in proposal.get("new_files") or []]
-        test_path, test_content = new_test["path"], new_test["content"]
+        if require_test or new_test is not None:
+            test_path, test_content = new_test["path"], new_test["content"]
     except (KeyError, TypeError, AttributeError):
         raise EditError('response must be {"explanation", "edits": [{"path","search","replace"}], '
                         '"new_test": {"path","content"}}')
@@ -68,6 +70,8 @@ def apply(repo, proposal, allow_new_files=False):
         originals.setdefault(rel, text)
         target.write_bytes(text.replace(search, replace).replace("\n", newline).encode("utf-8"))
 
+    if new_test is None:
+        return originals
     target = _inside(repo, test_path)
     if target.exists():
         raise EditError(f"new_test.path already exists (existing tests are locked): {test_path}")

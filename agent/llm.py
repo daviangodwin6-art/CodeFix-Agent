@@ -7,6 +7,9 @@ from pathlib import Path
 FAKE_FILE = Path(__file__).parent.parent / "tests" / "fake_llm_tinyauth.json"
 
 
+_fake_calls = {}  # (script file, step) -> calls made so far; fake provider only
+
+
 class LLMError(Exception):
     pass
 
@@ -15,8 +18,13 @@ def complete(prompt):
     """Send one prompt, get back the model's text (expected to be JSON)."""
     if os.getenv("LLM_PROVIDER", "gemini") == "fake":
         # Scripted responses keyed by the prompt's first line ("STEP: localize" / "STEP: edit").
-        script = json.loads(Path(os.getenv("FAKE_LLM_FILE") or FAKE_FILE).read_text(encoding="utf-8"))
-        return json.dumps(script[prompt.split("\n", 1)[0].removeprefix("STEP: ")])
+        path = os.getenv("FAKE_LLM_FILE") or str(FAKE_FILE)
+        step = prompt.split("\n", 1)[0].removeprefix("STEP: ")
+        answer = json.loads(Path(path).read_text(encoding="utf-8"))[step]
+        if isinstance(answer, list):  # one answer per call (the last one repeats), to script a retry
+            n = _fake_calls[path, step] = _fake_calls.get((path, step), -1) + 1
+            answer = answer[min(n, len(answer) - 1)]
+        return json.dumps(answer)
 
     key = os.getenv("GEMINI_API_KEY")
     if not key:

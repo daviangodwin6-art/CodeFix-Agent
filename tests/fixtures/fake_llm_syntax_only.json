@@ -1,0 +1,7 @@
+{
+  "syntax": {
+    "explanation": "The def line of add() had no colon, so calc.py did not parse. Added the colon.",
+    "edits": [{"path": "calc.py", "search": "def add(a, b)\n", "replace": "def add(a, b):\n"}],
+    "remaining_task": false
+  }
+}
