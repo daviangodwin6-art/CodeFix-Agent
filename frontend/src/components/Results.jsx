@@ -242,7 +242,9 @@ function Waiting({ run, busy, steps }) {
 
 export default function Results({ run, busy, steps }) {
   const done = finished(run);
-  const r = done ? run.result : null;
+  // A run cut off by a crash can have a nearly empty result: fill in what the cards read.
+  const r = done ? { attempts: 0, regressions: [], new_tests: [], baseline: {}, after: {}, ...run.result } : null;
+  if (r) run = { ...run, result: r };
   const root = useRef(null);
   useAnime(root, () => { // each state's cards arrive one by one; the banner icon springs in
     enter(root.current.children, { delay: (el, i) => i * 90 });
@@ -261,6 +263,15 @@ export default function Results({ run, busy, steps }) {
                 <h3 className="font-semibold text-sm text-slate-900">What changed &amp; Root Cause</h3>
               </div>
               <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 text-slate-700 text-xs leading-relaxed whitespace-pre-wrap break-words">{r.explanation || "(no explanation given)"}</div>
+            </div>
+          )}
+          {r.syntax && (
+            <div className={CARD + " p-4"}>
+              <h3 className="font-semibold text-sm text-slate-900 mb-2">Syntax repair</h3>
+              <ul className="font-mono text-xs text-slate-700 space-y-1 break-words">
+                {(r.syntax.files || []).map((f) => <li key={f.path + ":" + f.line}>{f.path} line {f.line}: {f.msg} · {f.after}</li>)}
+              </ul>
+              {r.syntax.only_syntax && <p className="mt-2 text-xs text-slate-500">Bug reproduced: n/a (syntax repair only). There is no fail-first test for code that did not parse.</p>}
             </div>
           )}
           {r.error && (

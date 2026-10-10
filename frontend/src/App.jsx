@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, finished, planSteps, post } from "./api.js";
 import * as auth from "./auth.js";
-import { preset } from "./mock.js"; // preview only: null outside `npm run dev` + ?mock=<state>
 import Login from "./components/Login.jsx";
 import Header from "./components/Header.jsx";
 import ConfigColumn, { RunMetadata, TYPES, VerifiedImports } from "./components/ConfigColumn.jsx";
@@ -38,7 +37,6 @@ export default function App() {
   const session = useRef(0); // bumped whenever the page stops watching a run, so its polling loop stops updating the page
   // "Continue offline" on the login page; kept for this tab so a refresh does not ask again.
   const [offline, setOfflineState] = useState(() => {
-    if (preset && preset.offline) return true;
     try { return sessionStorage.getItem("offline") === "1"; } catch (e) { return false; }
   });
   function setOffline(on) {
@@ -58,6 +56,11 @@ export default function App() {
     setRepos(null); // the repo list belongs to whoever is signed in now
   }, []);
   useEffect(() => { loadMe(); }, [loadMe]);
+  // Show a failed request. 401 means GitHub no longer accepts the sign-in: asking who we are again brings the login page back.
+  const fail = useCallback((e) => {
+    setError(e.message);
+    if (e.status === 401) loadMe();
+  }, [loadMe]);
 
   // GitHub modes need a sign-in.
   useEffect(() => {
@@ -86,10 +89,10 @@ export default function App() {
       return list;
     } catch (e) {
       setProjects([]);
-      setError(e.message);
+      fail(e);
       return [];
     }
-  }, []);
+  }, [fail]);
   // The project list belongs to whoever is signed in now.
   useEffect(() => {
     if (online === null) return;
@@ -110,10 +113,10 @@ export default function App() {
       setActive((a) => (a && a.project_id !== id ? a : full)); // another project was picked meanwhile
       return full;
     } catch (e) {
-      setError(e.message);
+      fail(e);
       return null;
     }
-  }, []);
+  }, [fail]);
   const refresh = (id) => { loadProjects(); return loadActive(id); };
 
   async function authAction(action) {
@@ -137,6 +140,8 @@ export default function App() {
         started = Date.parse(state.started_at) || started; // a run picked up midway has been going for a while
         setRun(state);
         if (finished(state)) {
+          clearInterval(clock);
+          if (state.duration_s != null) setElapsed(state.duration_s);
           if (state.project_id) refresh(state.project_id); // new head, new history entry
           break;
         }
@@ -169,11 +174,16 @@ export default function App() {
     setActive({ ...p, runs: null });
     const mine = session.current;
     const full = await loadActive(p.project_id);
-    const last = full && full.busy && full.last_run;
-    if (!last || last.status !== "running" || mine !== session.current) return;
-    const item = full.runs.find((r) => r.run_id === last.run_id); // show what the active run was asked to do
-    if (item) setForm((f) => ({ ...f, task: item.task, taskType: TYPES[item.mode] ? item.mode : f.taskType }));
-    follow(last.run_id);
+    if (mine === session.current) watchActive(full);
+  }
+
+  // If the project has a run going, show it (with what it was asked to do). Returns whether it did.
+  function watchActive(full) {
+    const item = full && full.busy && full.runs.find((r) => r.status === "running");
+    if (!item) return false;
+    setForm((f) => ({ ...f, task: item.task, taskType: TYPES[item.mode] ? item.mode : f.taskType }));
+    follow(item.run_id);
+    return true;
   }
 
   async function startRun() {
@@ -194,11 +204,15 @@ export default function App() {
       follow(id);
     } catch (e) {
       setBusy(false);
-      if (e.status !== 409) return setError(e.message);
-      // Busy is an answer, not a failure: say so, and show the run that is already going if we know it.
-      const p = linked && (await loadProjects()).find((x) => x.project_id === active.project_id);
+      if (e.status !== 409) return fail(e);
+      // Busy is an answer, not a failure: say so, and show the run that is already going on that project.
+      const id = e.detail && e.detail.project_id;
+      const p = id && (await loadProjects()).find((x) => x.project_id === id);
       setConflict(p ? p.display_name : repoName);
-      if (p && p.last_run && p.last_run.status === "running") follow(p.last_run.run_id);
+      if (!p) return;
+      setLink({ mode: form.mode, repo });
+      setActive((a) => (a && a.project_id === id ? a : { ...p, runs: null }));
+      watchActive(await loadActive(id));
     }
   }
 
@@ -207,16 +221,6 @@ export default function App() {
     const box = document.getElementById("task-input");
     if (box) box.focus();
   }
-
-  // Preview only (goes away with mock.js): open the state named in the URL.
-  const opened = useRef(false);
-  useEffect(() => {
-    if (!preset || !projects || opened.current) return;
-    opened.current = true;
-    const p = projects.find((x) => x.project_id === preset.select);
-    if (p) select(p);
-    if (preset.conflict) setConflict(preset.conflict);
-  }, [projects]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const steps = planSteps(run, form.taskType);
   const repoName = form[form.mode].trim().replace(/\.git$/, "").replace(/[\\/]+$/, "").split(/[\\/]/).pop();
@@ -262,8 +266,8 @@ export default function App() {
               ) : <BuildsOn project={linked ? active : null} run={run} />}
             </>
           ) : active ? (
-            <ProjectView key={active.project_id} project={active} initialDialog={preset ? preset.dialog : ""}
-                         onChanged={() => refresh(active.project_id)} onRerun={rerun}
+            <ProjectView key={active.project_id} project={active} onChanged={() => refresh(active.project_id)} onRerun={rerun}
+                         onSignedOut={loadMe}
                          onDeleted={() => { setActive(null); setLink(null); loadProjects(); }} />
           ) : <Results run={null} busy={false} steps={steps} />}
         </div>

@@ -52,7 +52,7 @@ export default function Header({ me, online, repoName, project, onSignIn, onSign
               <span className="hidden md:inline truncate">Autonomous patch generation, test verification &amp; regression analysis</span>
               {(project || repoName) && <span className="hidden md:inline-block w-1 h-1 rounded-full bg-slate-300 shrink-0"></span>}
               {project
-                ? <span className="font-mono text-[13.5px] text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 truncate">project: {project.display_name} @ {short(project.head_sha)}</span>
+                ? <span className="font-mono text-[13.5px] text-blue-700 bg-blue-50 border border-blue-200 rounded-md px-2 truncate">project: {project.display_name}{project.head_sha ? " @ " + short(project.head_sha) : ""}</span>
                 : repoName && <span className="text-blue-600 font-medium truncate">{repoName}</span>}
             </div>
           </div>

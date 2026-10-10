@@ -180,7 +180,7 @@ export function RunMetadata({ run }) {
               <div className={TILE_LABEL}>{feature ? "Mode" : "Reproduced"}</div>
               <div className="font-mono text-xs font-semibold text-slate-800 mt-0.5"
                    title={feature ? undefined : "Did the new test fail on the original code before the fix?"}>
-                {feature ? "feature" : r.reproduced ? "yes" : "no"}
+                {feature ? "feature" : r.syntax && r.syntax.only_syntax ? "n/a (syntax repair only)" : r.reproduced ? "yes" : "no"}
               </div>
             </div>
           </div>

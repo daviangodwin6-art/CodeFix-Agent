@@ -62,19 +62,19 @@ export default function Progress({ run, busy, steps, elapsed, head, className = 
           const retried = !finished(run) || steps.slice(i + 1).some((later) => later.status !== "pending");
           const v = look(s, retried);
           const detail = s.detail || "";
-          const inline = s.status === "ok" && detail.length <= 40; // short details sit on the right, long ones wrap below
+          const inline = s.status === "ok" && detail.length <= 24; // short details sit on the right, long ones wrap below
           const side = v.tag || [inline && detail, duration(s.duration_s)].filter(Boolean).join(" · ");
           return (
             <li key={i} aria-current={s.status === "running" ? "step" : undefined}
                 className={"border rounded-lg px-4 py-[9px] transition-colors duration-300 " + v.box}>
               <div className="flex items-center justify-between gap-3">
-                <span className={"flex items-center gap-2.5 min-w-0 font-mono text-[14.5px] " + v.title}>
+                <span className={"flex items-center gap-2.5 shrink-0 font-mono text-[14.5px] " + v.title}>
                   <span data-node className="w-4 flex justify-center shrink-0">
                     {v.icon ? <Icon name={v.icon} className="text-[17px]" /> : <span className={"w-[7px] h-[7px] rounded-full " + v.dot}></span>}
                   </span>
-                  <span className="truncate">{i + 1}. {s.name}<span className="sr-only"> ({s.status})</span></span>
+                  <span className="whitespace-nowrap">{i + 1}. {s.name}<span className="sr-only"> ({s.status})</span></span>
                 </span>
-                <span className={"font-mono text-[12.5px] shrink-0 " + v.side}>{side}</span>
+                <span className={"font-mono text-[12.5px] min-w-0 truncate " + v.side}>{side}</span>
               </div>
               {detail && !inline && <p className={"font-mono text-[12.5px] mt-1 pl-[26px] break-words " + v.side}>{detail}</p>}
             </li>

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { api, isHttps, post } from "../api.js";
 import { enter, useAnime } from "../motion.jsx";
 import Results, { Changes } from "./Results.jsx";
-import { BUTTON, CARD, Dialog, duration, Icon, KindBadge, plural, PRIMARY, short } from "./ui.jsx";
+import { ago, BUTTON, CARD, Dialog, duration, Icon, KindBadge, plural, PRIMARY, short } from "./ui.jsx";
 
 const PILL = {
   success: "bg-emerald-50 text-emerald-700 border-emerald-200", failed: "bg-rose-50 text-rose-700 border-rose-200",
@@ -28,7 +28,6 @@ function ResetDialog({ p, url, onClose, onDone }) {
   const [to, setTo] = useState(options[0] ? options[0].run_id : "base");
   const [error, setError] = useState("");
   const [working, setWorking] = useState(false);
-  const [tag] = useState(() => "codefix/archive/" + new Date().toISOString().slice(0, 16).replace(":", "-")); // the server names the real tag
   const choices = [{ id: "base", title: "Base", meta: [p.base_label || p.base_ref, short(p.base_sha)].filter(Boolean).join(" · ") },
     ...options.map((r) => ({ id: r.run_id, title: "After “" + r.task + "”", meta: r.run_id + " · " + short(r.commit_sha) }))];
 
@@ -67,8 +66,8 @@ function ResetDialog({ p, url, onClose, onDone }) {
             </div>
           </fieldset>
           <p className="mt-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 text-[14.5px] text-blue-900 leading-relaxed break-words">
-            The current head <code className="font-mono">{short(p.head_sha)}</code> will be kept as the archive tag{" "}
-            <code className="font-mono">{tag}</code>. You can reset back to it later.
+            The current head <code className="font-mono">{short(p.head_sha)}</code> will be kept as an archive tag{" "}
+            <code className="font-mono">codefix/archive/&lt;timestamp&gt;</code>, so it is never lost.
           </p>
           {error && <p role="alert" className="mt-3 text-[13.5px] text-rose-700 break-words">{error}</p>}
           <div className="mt-5 flex justify-end gap-3">
@@ -152,8 +151,8 @@ function Detail({ label, title, meta, onBack, children }) {
   );
 }
 
-export default function ProjectView({ project: p, initialDialog, onChanged, onDeleted, onRerun }) {
-  const [dialog, setDialog] = useState(initialDialog || "");
+export default function ProjectView({ project: p, onChanged, onDeleted, onRerun, onSignedOut }) {
+  const [dialog, setDialog] = useState("");
   const [view, setView] = useState(null); // null | { run, item } | { diff }
   const [note, setNote] = useState(null); // result of the last action: { tone, text, list?, url?, canWrite? }
   const [working, setWorking] = useState("");
@@ -174,6 +173,7 @@ export default function ProjectView({ project: p, initialDialog, onChanged, onDe
       setNote(e.status === 409
         ? { tone: "amber", text: "Project is busy. A run is active on " + p.display_name + "; try again when it finishes." }
         : { tone: "rose", text: e.message });
+      if (e.status === 401) onSignedOut(); // GitHub no longer accepts the sign-in: back to the login page
     }
     setWorking("");
   }
@@ -188,7 +188,7 @@ export default function ProjectView({ project: p, initialDialog, onChanged, onDe
   const sync = () => act("sync", async () => {
     const s = await post(url + "/sync");
     onChanged();
-    if (s.status === "conflict") return { tone: "amber", text: "Sync stopped: upstream conflicts with the project's changes in", list: s.conflicts || [] };
+    if (s.status === "conflict") return { tone: "amber", text: "Not synced: upstream conflicts with the project's changes. Nothing was changed. Conflicting files:", list: s.conflicts || [] };
     return s.status === "ok" ? { tone: "emerald", text: "Synced with upstream." } : { tone: "slate", text: "This project has no upstream to sync with." };
   });
   // Export writes a patch file; writing into the user's own folder is a second, explicit step.
@@ -203,7 +203,11 @@ export default function ProjectView({ project: p, initialDialog, onChanged, onDe
   // Asks first: a pull request notifies another person.
   function openPr() {
     if (!window.confirm("Open or update the pull request for " + p.display_name + "?\n\nThe repository owner will be notified, under your GitHub account.")) return;
-    act("pr", async () => ({ tone: "emerald", text: "Pull request:", url: (await post(url + "/pr")).url }));
+    act("pr", async () => {
+      const out = await post(url + "/pr");
+      onChanged();
+      return { tone: "emerald", text: "Pull request:", url: out.url };
+    });
   }
 
   if (view && view.run) {
@@ -264,7 +268,8 @@ export default function ProjectView({ project: p, initialDialog, onChanged, onDe
         {local ? <button type="button" disabled={!!working || p.busy} onClick={() => exportChanges(false)} className={BUTTON}>Export patch</button> : (
           <>
             <button type="button" disabled={!!working || p.busy} onClick={sync} className={BUTTON}>Sync with upstream</button>
-            <button type="button" disabled={!!working || p.busy} onClick={openPr} className={BUTTON}>Open / update PR</button>
+            <button type="button" disabled={!!working || p.busy} onClick={openPr} className={BUTTON}>{p.pr_url ? "Update PR" : "Open PR"}</button>
+            {isHttps(p.pr_url) && <a href={p.pr_url} target="_blank" rel="noopener noreferrer" className="text-[13.5px] text-blue-700 underline">View pull request</a>}
           </>
         )}
         <button type="button" disabled={!!working || p.busy} onClick={() => setDialog("reset")} className={BUTTON}>Reset to…</button>
@@ -314,6 +319,11 @@ export default function ProjectView({ project: p, initialDialog, onChanged, onDe
       <p className="mt-4 pl-[18px] font-mono text-[12.5px] text-slate-500 break-words">
         {["base", p.base_label || p.base_ref, short(p.base_sha)].filter(Boolean).join(" · ")}
       </p>
+      {(p.events || []).length > 0 && ( // resets, syncs and exports are not runs: they are listed here
+        <ul aria-label="Project events" className="mt-2 pl-[18px] flex flex-col gap-1 font-mono text-[12.5px] text-slate-500">
+          {p.events.map((e, i) => <li key={i} className="break-words">{[e.kind, e.detail, ago(e.at)].filter(Boolean).join(" · ")}</li>)}
+        </ul>
+      )}
 
       {dialog === "reset" && p.runs && ( // the choices come from the run history
         <ResetDialog p={p} url={url} onClose={() => setDialog("")}
