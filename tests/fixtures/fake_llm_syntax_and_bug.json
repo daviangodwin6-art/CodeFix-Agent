@@ -1,0 +1,16 @@
+{
+  "syntax": {
+    "explanation": "The def line of add() had no colon, so calc.py did not parse. Added the colon.",
+    "edits": [{"path": "calc.py", "search": "def add(a, b)\n", "replace": "def add(a, b):\n"}],
+    "remaining_task": true
+  },
+  "localize": {"files": ["calc.py", "tests/test_calc.py"]},
+  "edit": {
+    "explanation": "sub() added its arguments instead of subtracting them. It now returns a - b, and a new test checks it.",
+    "edits": [{"path": "calc.py", "search": "def sub(a, b):\n    return a + b", "replace": "def sub(a, b):\n    return a - b"}],
+    "new_test": {
+      "path": "tests/test_sub.py",
+      "content": "from calc import sub\n\n\ndef test_sub():\n    assert sub(5, 3) == 2\n"
+    }
+  }
+}

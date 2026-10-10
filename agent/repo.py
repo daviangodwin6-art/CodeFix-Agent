@@ -313,13 +313,27 @@ def py_files(repo):
             yield p
 
 
+def _parse(path):
+    """(tree, None), or (None, the SyntaxError). Parsing only: nothing from the repo is executed."""
+    try:
+        return ast.parse(path.read_text(encoding="utf-8", errors="replace")), None
+    except SyntaxError as e:
+        return None, e
+
+
+def syntax_errors(repo):
+    """[{"path", "line", "col", "msg"}] for every Python file that does not parse."""
+    repo = Path(repo)
+    return [{"path": p.relative_to(repo).as_posix(), "line": e.lineno or 1, "col": e.offset or 0, "msg": e.msg}
+            for p in py_files(repo) for e in [_parse(p)[1]] if e]
+
+
 def repo_map(repo, cap=12000):
     """One line per Python file: path and its top-level functions/classes (with methods)."""
     lines = []
     for p in py_files(repo):
-        try:
-            tree = ast.parse(p.read_text(encoding="utf-8", errors="replace"))
-        except SyntaxError as e:
+        tree, e = _parse(p)
+        if e:
             # A file that does not parse is often the very bug to fix; show it, don't hide it.
             lines.append(f"{p.relative_to(repo).as_posix()}: SYNTAX ERROR line {e.lineno}: {e.msg}")
             continue

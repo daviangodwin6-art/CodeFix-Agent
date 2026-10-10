@@ -60,6 +60,21 @@ def run_tests(python, repo, run_dir, label, target=None):
     return results, out
 
 
+def collection_errors(run_dir, label):
+    """[{"file", "message"}] for every test module pytest could not even import in the run `label`.
+
+    Read from the JUnit file run_tests() wrote, where such a module is a testcase without a class name.
+    """
+    xml = Path(run_dir) / f"junit_{label}.xml"
+    if not xml.exists():
+        return []
+    # ponytail: the file is rebuilt from pytest's dotted module name, so a directory with a dot in its
+    # name comes out wrong; read the path from the message if that ever matters.
+    return [{"file": case.get("name", "").replace(".", "/") + ".py", "message": error.text or error.get("message", "")}
+            for case in ET.parse(xml).getroot().iter("testcase") if not case.get("classname")
+            for error in case.findall("error")]
+
+
 def compare(before, after):
     """Tests that passed before and do not pass now (a deleted test counts)."""
     # ponytail: single run, no flaky-test rerun; rerun failures once here if flakiness shows up
