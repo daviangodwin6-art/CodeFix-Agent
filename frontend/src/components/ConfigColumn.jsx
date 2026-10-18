@@ -9,9 +9,9 @@ export const TYPES = {
              sample: "add a function email_domain(email) in auth/users.py that returns the part after the @, lowercased" },
 };
 const MODES = [["own", "My repo"], ["other", "Other's"], ["local", "Local"]];
-const FIELD = "w-full h-10 bg-slate-50 border border-slate-200 text-slate-900 font-mono text-[14.5px] rounded-lg px-3.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all";
-const TILE = "bg-slate-50 border border-slate-200/80 p-2 rounded-lg min-w-0";
-const TILE_LABEL = "text-[10px] text-slate-500 uppercase font-mono font-medium";
+const FIELD = "w-full h-10 bg-[#040711]/60 border border-white/[0.08] text-slate-50 font-mono text-[14.5px] rounded-lg px-3.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#040711]/80 transition-all";
+const TILE = "bg-white/[0.03] border border-white/[0.08] p-2 rounded-lg min-w-0";
+const TILE_LABEL = "text-[10px] text-slate-400 uppercase font-mono font-medium";
 
 // `linked` is the active project when the Repository field still points at it; `conflict` names a busy project (HTTP 409).
 function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRun, error, onDismissError, linked, conflict }) {
@@ -28,18 +28,18 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
   return (
     <section className={CARD + " p-[22px] flex flex-col gap-4"}>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-[17.5px] text-slate-900">Run Configuration</h2>
+        <h2 className="font-semibold text-[17.5px] text-slate-50">Run Configuration</h2>
         <select aria-label="What should the agent do?" value={form.taskType} disabled={busy} onChange={(e) => changeType(e.target.value)}
-                className="font-mono text-[13.5px] bg-slate-50 text-slate-800 px-2 h-[30px] rounded-md border border-slate-200 cursor-pointer outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-100">
+                className="font-mono text-[13.5px] bg-white/[0.03] text-slate-200 px-2 h-[30px] rounded-md border border-white/[0.08] cursor-pointer outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-100">
           {Object.entries(TYPES).map(([id, t]) => <option key={id} value={id}>{t.option}</option>)}
         </select>
       </div>
 
       {error && (
-        <div role="alert" className="fade-in bg-rose-50 border border-rose-200 text-rose-900 p-3 rounded-lg flex items-start gap-2">
-          <Icon name="error" className="text-[18px] text-rose-600 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0 text-[13px] text-rose-800 break-words whitespace-pre-wrap leading-snug">{error}</div>
-          <button type="button" aria-label="Dismiss error" onClick={onDismissError} className="text-rose-600 hover:text-rose-800 p-0.5">
+        <div role="alert" className="fade-in bg-rose-500/10 border border-rose-500/25 text-rose-200 p-3 rounded-lg flex items-start gap-2">
+          <Icon name="error" className="text-[18px] text-rose-400 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0 text-[13px] text-rose-300 break-words whitespace-pre-wrap leading-snug">{error}</div>
+          <button type="button" aria-label="Dismiss error" onClick={onDismissError} className="text-rose-400 hover:text-rose-300 p-0.5">
             <Icon name="close" className="text-[15px]" />
           </button>
         </div>
@@ -50,7 +50,7 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
           <input type="text" readOnly aria-label="Repository" value={form[form.mode].replace(/^https:\/\//, "")} className={FIELD} />
         ) : (
           <div className="flex flex-col gap-2.5">
-            <div className="text-[15.5px] font-semibold text-slate-900 flex items-center justify-between gap-2">
+            <div className="text-[15.5px] font-semibold text-slate-50 flex items-center justify-between gap-2">
               <label htmlFor={"repo-" + form.mode}>Repository</label>
               <span role="radiogroup" aria-label="Whose repository is it?" className="flex font-mono text-[12.5px] font-normal">
                 {MODES.map(([id, text], i) => {
@@ -59,7 +59,7 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
                     <button key={id} type="button" role="radio" aria-checked={form.mode === id} disabled={off}
                             title={off ? "Sign in with GitHub first" : undefined} onClick={() => set({ mode: id })}
                             className={"px-2.5 py-0.5 border transition-colors " + (i ? "-ml-px " : "rounded-l ") + (i === MODES.length - 1 ? "rounded-r " : "") +
-                              (form.mode === id ? "bg-blue-50 text-blue-700 font-semibold border-blue-200 z-10 relative " : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 ") +
+                              (form.mode === id ? "bg-blue-500/10 text-blue-300 font-semibold border-blue-500/25 z-10 relative " : "bg-white/[0.04] text-slate-400 border-white/[0.08] hover:bg-white/[0.03] ") +
                               (off ? "opacity-50 cursor-not-allowed" : "")}>
                       {text}
                     </button>
@@ -78,7 +78,7 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
                       : list.map((r) => <option key={r.url} value={r.url}>{r.name + (r.private ? "  (private)" : "")}</option>)}
                   </select>
                   <button type="button" aria-label="Refresh repository list" title="Refresh" onClick={onRefreshRepos}
-                          className="ml-2 w-10 h-10 shrink-0 rounded-lg bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 border border-slate-200 transition flex items-center justify-center">
+                          className="ml-2 w-10 h-10 shrink-0 rounded-lg bg-white/[0.06] hover:bg-white/10 active:scale-95 text-slate-400 border border-white/[0.08] transition flex items-center justify-center">
                     <Icon name="refresh" className="text-[18px]" />
                   </button>
                 </>
@@ -92,26 +92,26 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
         )}
 
         <div className="flex flex-col gap-2.5">
-          <label htmlFor="task-input" className="text-[15.5px] font-semibold text-slate-900">{type.label}</label>
+          <label htmlFor="task-input" className="text-[15.5px] font-semibold text-slate-50">{type.label}</label>
           <textarea id="task-input" rows="3" value={form.task} readOnly={busy} onChange={(e) => set({ task: e.target.value })}
                     placeholder="Describe the next bug or feature…"
-                    className="w-full h-[95px] bg-white border border-slate-200 text-slate-900 text-[14.5px] rounded-lg px-3.5 py-3 outline-none placeholder:text-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none leading-snug" />
+                    className="w-full h-[95px] bg-white/[0.04] border border-white/[0.08] text-slate-50 text-[14.5px] rounded-lg px-3.5 py-3 outline-none placeholder:text-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none leading-snug" />
         </div>
 
         <button type="submit" disabled={busy}
-                className="w-full h-[49px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 active:scale-[0.99] text-white rounded-lg text-[15.5px] font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-all disabled:bg-blue-300 disabled:cursor-not-allowed disabled:active:scale-100">
+                className="sheen w-full h-[49px] bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:brightness-110 active:scale-[0.99] text-white rounded-lg text-[15.5px] font-semibold flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_30px_-8px_rgba(59,130,246,0.8)] transition-all disabled:opacity-50 disabled:hover:brightness-100 disabled:cursor-not-allowed disabled:active:scale-100">
           {!busy && <Icon name="play_arrow" fill className="text-[20px]" />}
           <span>{busy ? "Running…" : "Execute Repair"}</span>
         </button>
       </form>
 
       {conflict && (
-        <p role="status" className="fade-in rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-[13.5px] text-amber-900 leading-snug break-words">
+        <p role="status" className="fade-in rounded-lg border border-amber-500/25 bg-amber-500/10 px-3.5 py-3 text-[13.5px] text-amber-200 leading-snug break-words">
           Project is busy. A run is already active on {conflict}. You can start a run on another project.
         </p>
       )}
       {linked && !busy && (
-        <p className="font-mono text-[12.5px] text-slate-500 break-words">
+        <p className="font-mono text-[12.5px] text-slate-400 break-words">
           Continues from head {short(linked.head_sha)} · {plural(linked.changes_ahead_of_base, "earlier change")} kept
         </p>
       )}
@@ -124,26 +124,26 @@ export function VerifiedImports({ run }) {
   return (
     <section className={CARD + " p-4"}>
       <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-xs text-slate-900 flex items-center gap-1.5">
-          <Icon name="search_check" className="text-[16px] text-slate-500" />
+        <span className="font-semibold text-xs text-slate-50 flex items-center gap-1.5">
+          <Icon name="search_check" className="text-[16px] text-slate-400" />
           Verified Imports &amp; Scope
         </span>
-        {items.length > 0 && <span className="font-mono text-[10px] text-slate-400"><CountUp value={items.length} /> verified</span>}
+        {items.length > 0 && <span className="font-mono text-[10px] text-slate-500"><CountUp value={items.length} /> verified</span>}
       </div>
       {items.length ? (
         <div className="flex flex-col gap-1.5 font-mono text-xs">
           {items.map((item) => {
             const m = /^(.*) \(([^)]+)\)$/.exec(String(item)); // "auth.users (repo)"
             return (
-              <div key={item} className="bg-slate-50 border border-slate-200/80 text-slate-700 px-2.5 py-1.5 rounded-md flex items-center justify-between gap-2">
+              <div key={item} className="bg-white/[0.03] border border-white/[0.08] text-slate-300 px-2.5 py-1.5 rounded-md flex items-center justify-between gap-2">
                 <span className="truncate" title={m ? m[1] : item}>{m ? m[1] : String(item)}</span>
-                {m && <span className="text-[10px] text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0">{m[2]}</span>}
+                {m && <span className="text-[10px] text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.08] shrink-0">{m[2]}</span>}
               </div>
             );
           })}
         </div>
       ) : (
-        <p className="text-[11px] text-slate-500 leading-snug">
+        <p className="text-[11px] text-slate-400 leading-snug">
           {finished(run) ? "The change added no new imports." : "Every import a change adds is checked to really exist. The list appears after a run."}
         </p>
       )}
@@ -157,28 +157,28 @@ export function RunMetadata({ run }) {
   return (
     <section className={CARD + " p-4 flex flex-col gap-3"}>
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-xs text-slate-900 flex items-center gap-1.5">
-          <Icon name="info" className="text-[16px] text-slate-500" />
+        <span className="font-semibold text-xs text-slate-50 flex items-center gap-1.5">
+          <Icon name="info" className="text-[16px] text-slate-400" />
           Run Metadata
         </span>
-        {run && <span className="font-mono text-[10px] text-slate-500">#{run.id}</span>}
+        {run && <span className="font-mono text-[10px] text-slate-400">#{run.id}</span>}
       </div>
       {!r ? (
-        <p className="text-[11px] text-slate-500 leading-snug">{run ? "Filled in when the run finishes." : "No run yet."}</p>
+        <p className="text-[11px] text-slate-400 leading-snug">{run ? "Filled in when the run finishes." : "No run yet."}</p>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className={TILE}>
               <div className={TILE_LABEL}>Branch</div>
-              <div className="font-mono text-xs font-semibold text-slate-800 truncate mt-0.5" title={r.branch}>{r.branch || "none"}</div>
+              <div className="font-mono text-xs font-semibold text-slate-200 truncate mt-0.5" title={r.branch}>{r.branch || "none"}</div>
             </div>
             <div className={TILE}>
               <div className={TILE_LABEL}>Attempts</div>
-              <div className="font-mono text-xs font-semibold text-slate-800 mt-0.5"><CountUp value={r.attempts} /></div>
+              <div className="font-mono text-xs font-semibold text-slate-200 mt-0.5"><CountUp value={r.attempts} /></div>
             </div>
             <div className={TILE}>
               <div className={TILE_LABEL}>{feature ? "Mode" : "Reproduced"}</div>
-              <div className="font-mono text-xs font-semibold text-slate-800 mt-0.5"
+              <div className="font-mono text-xs font-semibold text-slate-200 mt-0.5"
                    title={feature ? undefined : "Did the new test fail on the original code before the fix?"}>
                 {feature ? "feature" : r.syntax && r.syntax.only_syntax ? "n/a (syntax repair only)" : r.reproduced ? "yes" : "no"}
               </div>
@@ -187,10 +187,10 @@ export function RunMetadata({ run }) {
           {[["Report", r.report_path], ["Commit", r.commit_sha]].filter(([, v]) => v).map(([label, value]) => (
             <div key={label}>
               <div className={TILE_LABEL + " mb-0.5"}>{label}</div>
-              <div className="bg-slate-50 border border-slate-200/70 p-2 rounded-lg flex items-center justify-between text-slate-600 font-mono text-[11px]">
+              <div className="bg-white/[0.03] border border-white/[0.08] p-2 rounded-lg flex items-center justify-between text-slate-400 font-mono text-[11px]">
                 {isHttps(value)
-                  ? <a href={value} target="_blank" rel="noopener noreferrer" className="truncate text-blue-600 underline" title={value}>{value}</a>
-                  : <span className="truncate text-slate-500" title={value}>{value}</span>}
+                  ? <a href={value} target="_blank" rel="noopener noreferrer" className="truncate text-blue-400 underline" title={value}>{value}</a>
+                  : <span className="truncate text-slate-400" title={value}>{value}</span>}
                 <Copy text={value} />
               </div>
             </div>

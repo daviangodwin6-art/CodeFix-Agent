@@ -12,6 +12,15 @@ html.classList.toggle("motion", stored() ? stored() === "1" : !window.matchMedia
 
 export const still = () => !html.classList.contains("motion");
 
+// Glass spotlight: the hovered card's light follows the pointer (index.css reads --mx/--my).
+window.addEventListener("pointermove", (e) => {
+  const card = !still() && e.target.closest && e.target.closest(".glass");
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty("--mx", e.clientX - r.left + "px");
+  card.style.setProperty("--my", e.clientY - r.top + "px");
+}, { passive: true });
+
 export function MotionToggle({ className = "" }) {
   const [on, setOn] = useState(!still());
   function toggle() {
@@ -22,7 +31,7 @@ export function MotionToggle({ className = "" }) {
   return (
     <button type="button" role="switch" aria-checked={on} onClick={toggle} title="Turn animations on or off"
             className={"flex items-center gap-1 whitespace-nowrap rounded px-2 py-1 border transition-colors " +
-              (on ? "border-blue-200 bg-blue-50 text-blue-700 " : "border-slate-300 bg-white text-slate-600 ") + className}>
+              (on ? "border-blue-500/25 bg-blue-500/10 text-blue-300 " : "border-white/[0.14] bg-white/[0.04] text-slate-400 ") + className}>
       <span aria-hidden="true" className="material-symbols-outlined text-[14px]">animation</span>
       <span>Motion {on ? "on" : "off"}</span>
     </button>

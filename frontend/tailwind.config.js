@@ -1,4 +1,4 @@
-// Theme copied from stitch_codefix_agent_developer_console/code.html so the design's class names work unchanged.
+// Theme from stitch_codefix_agent_workspace (DESIGN.md, "Obsidian Kinetic"); class names unchanged from the earlier design.
 // Only difference: font stacks name the npm-bundled fonts ("Geist Variable") and add fallbacks.
 const sans = ["Geist Variable", "Geist", "system-ui", "sans-serif"];
 const mono = ["JetBrains Mono", "ui-monospace", "Consolas", "monospace"];
@@ -7,25 +7,18 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
-      colors: {
-        "on-error": "#ffffff", "on-tertiary-container": "#ffede6", "outline": "#737686", "surface-tint": "#0053db",
-        "surface-container-highest": "#d9e2fc", "primary-fixed": "#dbe1ff", "error": "#ba1a1a",
-        "on-primary-fixed": "#00174b", "on-error-container": "#93000a", "background": "#f9f9ff",
-        "on-background": "#121b2e", "on-surface-variant": "#434655", "outline-variant": "#c3c6d7",
-        "on-primary-container": "#eeefff", "secondary": "#505f76", "on-tertiary-fixed-variant": "#7d2d00",
-        "surface-dim": "#d1daf4", "primary-fixed-dim": "#b4c5ff", "surface": "#f9f9ff", "on-secondary": "#ffffff",
-        "on-secondary-container": "#54647a", "primary": "#004ac6", "tertiary-fixed": "#ffdbcd",
-        "secondary-fixed": "#d3e4fe", "on-tertiary": "#ffffff", "surface-variant": "#d9e2fc",
-        "surface-bright": "#f9f9ff", "surface-container-low": "#f1f3ff", "on-secondary-fixed-variant": "#38485d",
-        "inverse-surface": "#273044", "tertiary-fixed-dim": "#ffb596", "secondary-fixed-dim": "#b7c8e1",
-        "inverse-on-surface": "#edf0ff", "on-secondary-fixed": "#0b1c30", "surface-container-lowest": "#ffffff",
-        "tertiary-container": "#bc4800", "on-tertiary-fixed": "#360f00", "tertiary": "#943700",
-        "on-primary-fixed-variant": "#003ea8", "inverse-primary": "#b4c5ff", "surface-container-high": "#e1e8ff",
-        "secondary-container": "#d0e1fb", "surface-container": "#e9edff", "on-surface": "#121b2e",
-        "on-primary": "#ffffff", "primary-container": "#2563eb", "error-container": "#ffdad6",
-        // semantic status colours from DESIGN.md (success / warning are not in the Stitch token set)
-        "success": "#16a34a", "success-container": "#f0fdf4", "success-outline": "#bbf7d0",
-        "warning": "#d97706", "warning-container": "#fffbeb", "warning-outline": "#fde68a",
+      colors: { // Obsidian Kinetic tokens (stitch_codefix_agent_workspace/DESIGN.md)
+        "surface": "#0f131c", "surface-dim": "#0f131c", "surface-bright": "#353943",
+        "surface-container-lowest": "#0a0e17", "surface-container-low": "#181b25", "surface-container": "#1c1f29",
+        "surface-container-high": "#262a34", "surface-container-highest": "#31353f", "surface-variant": "#31353f",
+        "on-surface": "#dfe2ef", "on-surface-variant": "#c2c6d6", "inverse-surface": "#dfe2ef", "inverse-on-surface": "#2c303a",
+        "outline": "#8c909f", "outline-variant": "#424754", "surface-tint": "#adc6ff", "background": "#040711", "on-background": "#dfe2ef",
+        "primary": "#adc6ff", "on-primary": "#002e6a", "primary-container": "#4d8eff", "on-primary-container": "#00285d", "inverse-primary": "#005ac2",
+        "secondary": "#4cd7f6", "on-secondary": "#003640", "secondary-container": "#03b5d3", "on-secondary-container": "#00424e",
+        "tertiary": "#4edea3", "on-tertiary": "#003824", "tertiary-container": "#00a572", "on-tertiary-container": "#00311f",
+        "error": "#ffb4ab", "on-error": "#690005", "error-container": "#93000a", "on-error-container": "#ffdad6",
+        "success": "#10b981", "success-container": "rgba(16,185,129,0.12)", "success-outline": "rgba(16,185,129,0.25)",
+        "warning": "#f59e0b", "warning-container": "rgba(245,158,11,0.12)", "warning-outline": "rgba(245,158,11,0.25)",
       },
       borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
       spacing: {

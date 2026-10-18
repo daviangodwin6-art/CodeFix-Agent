@@ -235,7 +235,7 @@ export default function App() {
   }
 
   return (
-    <div className="font-headline min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A] antialiased">
+    <div className="font-headline min-h-screen flex flex-col bg-transparent text-slate-50 antialiased">
       <Header me={me} online={online} repoName={repoName} project={linked ? active : null}
               onSignIn={() => setOffline(false)} onSignOut={() => { setOffline(false); authAction(auth.signOut); }} />
       <main className="flex-1 w-full max-w-[1920px] mx-auto p-4 lg:px-8 lg:py-7">

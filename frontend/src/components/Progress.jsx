@@ -5,23 +5,23 @@ import { enter, pop, useAnime, useChanged } from "../motion.jsx";
 import { CARD, duration, Icon, plural, short } from "./ui.jsx";
 
 const BADGE = {
-  standby: ["bg-slate-100 text-slate-600 border-slate-200", "STANDBY"],
-  running: ["bg-blue-50 text-blue-700 border-blue-200", "RUNNING"],
-  success: ["bg-emerald-50 text-emerald-700 border-emerald-200", "SUCCESS"],
-  failed: ["bg-rose-50 text-rose-700 border-rose-200", "FAILED"],
-  env_failed: ["bg-amber-50 text-amber-800 border-amber-200", "ENV FAULT"],
+  standby: ["bg-white/[0.06] text-slate-400 border-white/[0.08]", "STANDBY"],
+  running: ["bg-blue-500/10 text-blue-300 border-blue-500/25", "RUNNING"],
+  success: ["bg-emerald-500/10 text-emerald-300 border-emerald-500/25", "SUCCESS"],
+  failed: ["bg-rose-500/10 text-rose-300 border-rose-500/25", "FAILED"],
+  env_failed: ["bg-amber-500/10 text-amber-300 border-amber-500/25", "ENV FAULT"],
 };
 
 const envReused = (step) => step.name === "environment" && step.status === "ok" && /reused/i.test(step.detail || "");
 
 // How one step is drawn. A rejected attempt that was followed by another attempt is a "retry", not a failure.
 function look(step, retried) {
-  if (envReused(step)) return { icon: "check", box: "bg-emerald-50 border-emerald-200", title: "text-slate-800", side: "text-emerald-700 font-medium" };
-  if (step.status === "ok") return { icon: "check", box: "bg-white border-slate-200", title: "text-slate-800", side: "text-slate-500" };
-  if (step.status === "running") return { dot: "bg-blue-600", box: "bg-white border-blue-500 ring-1 ring-blue-500/25", title: "text-blue-700", side: "text-blue-600", tag: "running…" };
-  if (step.status === "error" && retried) return { icon: "warning", box: "bg-amber-50/60 border-amber-200", title: "text-amber-900", side: "text-amber-800", tag: "retry" };
-  if (step.status === "error") return { icon: "close", box: "bg-rose-50/70 border-rose-200", title: "text-rose-900", side: "text-rose-800", tag: "failed" };
-  return { dot: "border border-slate-400", box: "bg-white border-slate-200", title: "text-slate-500", side: "text-slate-400", tag: "pending" };
+  if (envReused(step)) return { icon: "check", box: "bg-emerald-500/10 border-emerald-500/25", title: "text-slate-200", side: "text-emerald-300 font-medium" };
+  if (step.status === "ok") return { icon: "check", box: "bg-white/[0.04] border-white/[0.08]", title: "text-slate-200", side: "text-slate-400" };
+  if (step.status === "running") return { dot: "bg-cyan-400 pulse-dot", box: "bg-blue-500/[0.08] border-blue-500 ring-1 ring-blue-500/25", title: "text-blue-300", side: "text-blue-400", tag: "running…" };
+  if (step.status === "error" && retried) return { icon: "warning", box: "bg-amber-500/10 border-amber-500/25", title: "text-amber-200", side: "text-amber-300", tag: "retry" };
+  if (step.status === "error") return { icon: "close", box: "bg-rose-500/10 border-rose-500/25", title: "text-rose-200", side: "text-rose-300", tag: "failed" };
+  return { dot: "border border-slate-600", box: "bg-white/[0.04] border-white/[0.08]", title: "text-slate-400", side: "text-slate-500", tag: "pending" };
 }
 
 const clock = (seconds) => Math.floor(seconds / 60) + ":" + String(Math.floor(seconds) % 60).padStart(2, "0");
@@ -45,10 +45,10 @@ export default function Progress({ run, busy, steps, elapsed, head, className = 
 
   return (
     <section aria-labelledby="progress-title" className={CARD + " p-[25px] min-w-0 " + className}>
-      <div className="flex items-start justify-between gap-3 pb-2.5 mb-3 border-b border-slate-200">
+      <div className="flex items-start justify-between gap-3 pb-2.5 mb-3 border-b border-white/[0.08]">
         <div className="min-w-0">
-          <h2 id="progress-title" className="font-semibold text-[17.5px] text-slate-900">Run Progress</h2>
-          <p className="text-[13.5px] text-slate-500 truncate">
+          <h2 id="progress-title" className="font-semibold text-[17.5px] text-slate-50">Run Progress</h2>
+          <p className="text-[13.5px] text-slate-400 truncate">
             {[run && run.id, head ? "continuing from head " + short(head) : "Baseline tests, change, verify"].filter(Boolean).join(" · ")}
           </p>
         </div>
@@ -98,21 +98,21 @@ export function BuildsOn({ project: p, run }) {
     ["Project head", [short(head), p && p.branch].filter(Boolean).join(" · ")],
     ["Earlier changes kept", p ? plural(p.changes_ahead_of_base, "commit") + (wins === null ? "" : " from " + plural(wins, "successful run")) : ""],
     ["Locked tests", p && p.locked_tests ? p.locked_tests.total + " (" + p.locked_tests.added_by_runs + " added by earlier runs)" : ""],
-    ["Environment", env || "checking…", /reused/i.test(env) ? "text-emerald-700" : env ? "text-slate-900" : "text-slate-500"],
+    ["Environment", env || "checking…", /reused/i.test(env) ? "text-emerald-300" : env ? "text-slate-50" : "text-slate-400"],
   ];
   return (
     <section aria-labelledby="builds-title" className={CARD + " p-[25px] min-w-0"}>
-      <h2 id="builds-title" className="font-semibold text-[17.5px] text-slate-900">What this run builds on</h2>
+      <h2 id="builds-title" className="font-semibold text-[17.5px] text-slate-50">What this run builds on</h2>
       <dl className="mt-4 flex flex-col gap-4">
         {rows.map(([label, value, tone]) => (
           <div key={label}>
-            <dt className="text-[13.5px] text-slate-500">{label}</dt>
-            <dd className={"mt-1 font-mono text-[14.5px] break-words " + (tone || "text-slate-900")}>{value || "…"}</dd>
+            <dt className="text-[13.5px] text-slate-400">{label}</dt>
+            <dd className={"mt-1 font-mono text-[14.5px] break-words " + (tone || "text-slate-50")}>{value || "…"}</dd>
           </div>
         ))}
       </dl>
       {head && (
-        <p className="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-3 text-[13.5px] text-slate-700 leading-relaxed">
+        <p className="mt-5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3.5 py-3 text-[13.5px] text-slate-300 leading-relaxed">
           If this run fails, the project goes back to {short(head)}. Nothing half-applied is kept.
         </p>
       )}
