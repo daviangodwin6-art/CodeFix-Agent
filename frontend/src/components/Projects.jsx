@@ -11,17 +11,17 @@ function Row({ p, active, onSelect }) {
   return (
     <li>
       <button type="button" aria-current={active ? "page" : undefined} onClick={() => onSelect(p)}
-              className={"w-full text-left rounded-sm border border-l-2 px-3 py-2.5 transition-colors " +
+              className={"w-full text-left rounded-sm border border-l-2 px-4 py-3 transition-colors " +
                 (active ? "bg-raised border-line border-l-accent-fg" : "bg-surface border-line border-l-line hover:bg-raised hover:border-line-strong")}>
         <span className="flex items-center gap-2 min-w-0">
           {p.busy ? <Spinner className="text-base text-accent-fg shrink-0" />
             : <span aria-hidden="true" className={"w-2 h-2 rounded-full shrink-0 " + (failed ? "bg-bad shadow-[0_0_6px_#FF8588]" : last ? "bg-ok shadow-[0_0_6px_#55E6A5]" : "bg-line-strong")}></span>}
           <span className="sr-only">{p.busy ? "Run in progress:" : failed ? "Last run failed:" : last ? "Last run succeeded:" : "No runs yet:"}</span>
-          <span className="text-sm font-medium text-ink truncate">{p.display_name}</span>
+          <span className="text-base font-medium text-ink truncate">{p.display_name}</span>
           <span className="ml-auto pl-1 shrink-0"><KindBadge kind={p.kind} /></span>
         </span>
-        <span className="block mt-1 font-mono text-xs text-ink-3 truncate">{meta}</span>
-        <span className={"block mt-1.5 pt-1.5 border-t border-line font-mono text-[11px] font-semibold uppercase tracking-[0.1em] " + (p.busy ? "text-accent-fg" : env.state === "ready" ? "text-ok" : "text-ink-3")}>
+        <span className="block mt-1 font-mono text-sm text-ink-3 truncate">{meta}</span>
+        <span className={"block mt-1.5 pt-1.5 border-t border-line font-mono text-xs font-semibold uppercase tracking-[0.1em] " + (p.busy ? "text-accent-fg" : env.state === "ready" ? "text-ok" : "text-ink-3")}>
           {p.busy ? "running…" : env.state === "ready" ? "env ready" : "env " + (env.state || "missing")}
         </span>
       </button>
@@ -38,7 +38,7 @@ export default function Projects({ projects, activeId, homeActive, signedIn, onS
   const rows = useRef(null);
   useAnime(rows, () => enter(rows.current.children, { y: [8, 0] }), [list.length]);
   return (
-    <div className="p-3 flex flex-col gap-3 lg:h-full lg:overflow-y-auto">
+    <div className="p-4 flex flex-col gap-3 lg:h-full lg:overflow-y-auto">
       <button type="button" onClick={onNew} aria-current={homeActive ? "page" : undefined}
               className={button("secondary", "md") + " w-full justify-start " + (homeActive ? "!bg-raised !border-l-2 !border-l-accent" : "")}>
         <Icon name="add" className={"text-lg " + (homeActive ? "text-reactor" : "text-accent-fg")} /> New run
@@ -46,7 +46,7 @@ export default function Projects({ projects, activeId, homeActive, signedIn, onS
 
       <div className="flex items-center gap-2 px-1">
         <h2 id="projects-title" className={LABEL}>Projects</h2>
-        {projects && <span className="font-mono text-[11px] font-semibold text-gold">{all.length}</span>}
+        {projects && <span className="font-mono text-xs font-semibold text-gold">{all.length}</span>}
         <span aria-hidden="true" className="flex-1 border-t border-line"></span>
       </div>
 

@@ -2,7 +2,7 @@ import { MotionToggle } from "../motion.jsx";
 import { button, Icon, Logo } from "./ui.jsx";
 
 const MENU_ID = "account-menu";
-const CHIP = "inline-flex items-center gap-2 h-8 rounded-sm border font-mono text-[11px] font-semibold uppercase tracking-[0.1em] whitespace-nowrap ";
+const CHIP = "inline-flex items-center gap-2 h-8 rounded-sm border font-mono text-xs font-semibold uppercase tracking-[0.1em] whitespace-nowrap ";
 
 // Telemetry chip: glowing pip + text. `collapse` hides the text below sm (it stays for screen readers).
 export function ApiStatus({ online, collapse = false }) {
@@ -35,7 +35,7 @@ function Account({ me, onSignIn, onSignOut }) {
       <div id={MENU_ID} popover="auto" style={{ position: "fixed", inset: "auto", right: "1rem", top: "3.5rem" }}
            className="m-0 bg-raised border border-line rounded-sm shadow-aura p-1 w-56 text-ink">
         <a href={profile} target="_blank" rel="noopener noreferrer" className="block px-2.5 py-1.5 rounded-sm hover:bg-surface">
-          <span className="block font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">Signed in as</span>
+          <span className="block font-mono text-xs uppercase tracking-[0.1em] text-ink-3">Signed in as</span>
           <span className="block font-mono text-xs truncate">{me.login}</span>
         </a>
         <button type="button" className="w-full mt-0.5 px-2.5 py-1.5 rounded-sm text-left font-mono text-xs font-semibold uppercase tracking-[0.08em] text-bad hover:bg-bad/10 flex items-center gap-1.5"

@@ -28,7 +28,7 @@ function Segment({ name, value, onChange, options, disabled, kind = "cards" }) {
             <>
               <span aria-hidden="true" className="absolute right-3 top-3 h-2 w-2 rounded-full bg-line-strong peer-checked:bg-reactor peer-checked:shadow-glow-red" />
               <span className="pr-5 font-display text-base font-bold uppercase tracking-wide">{text}</span>
-              {sub && <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-3">{sub}</span>}
+              {sub && <span className="font-mono text-xs uppercase tracking-[0.08em] text-ink-3">{sub}</span>}
             </>
           ) : (
             <>
@@ -127,7 +127,7 @@ export default function Composer({ form, setForm, me, repos, onRefreshRepos, bus
           <label htmlFor="task-input" className={LABEL + " flex min-w-0 items-center gap-1.5"}>
             <Icon name="terminal" className="text-base text-accent-fg" /><span className="truncate">{type.label}</span>
           </label>
-          <span id="task-hint" className="hidden sm:inline shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">Ctrl+Enter to run</span>
+          <span id="task-hint" className="hidden sm:inline shrink-0 font-mono text-xs uppercase tracking-[0.1em] text-ink-3">Ctrl+Enter to run</span>
         </div>
         <textarea id="task-input" rows="4" value={form.task} readOnly={busy} aria-describedby={"task-hint" + (form.taskType === "feature" ? " task-hint-2" : "")}
                   onChange={(e) => set({ task: e.target.value })}

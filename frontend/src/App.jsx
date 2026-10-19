@@ -279,12 +279,12 @@ export default function App() {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-sm focus:bg-accent focus:text-ink focus:border focus:border-accent-fg focus:px-3 focus:py-2 focus:font-mono focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.1em]">Skip to content</a>
       <Header me={me} online={online} crumbs={crumbs}
               onSignIn={() => setOffline(false)} onSignOut={() => { setOffline(false); authAction(auth.signOut); }} />
-      <div className="flex-1 lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="flex-1 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] 2xl:grid-cols-[21rem_minmax(0,1fr)]">
         <nav aria-label="Projects" className="bg-surface border-b border-line lg:border-b-0 lg:border-r lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:self-start">
           <Projects projects={projects} activeId={active ? active.project_id : ""} homeActive={viewKey === "home"} signedIn={me.signed_in}
                     onSelect={select} onNew={goHome} onSignIn={() => (auth.configured ? authAction(auth.signIn) : setOffline(false))} />
         </nav>
-        <main id="main" tabIndex={-1} className="min-w-0 w-full max-w-6xl mx-auto p-4 lg:p-6 flex flex-col gap-4 focus:outline-none">
+        <main id="main" tabIndex={-1} className="min-w-0 w-full max-w-[110rem] mx-auto p-4 lg:p-6 xl:px-8 flex flex-col gap-4 focus:outline-none">
           {error && <Notice tone="bad" onDismiss={() => setError("")}>{error}</Notice>}
 
           {showRun ? (

@@ -64,7 +64,7 @@ export default function Login({ online, canSignIn, error, onGitHub, onOffline })
             {!canSignIn && <p className="mt-2 text-xs text-ink-3">GitHub sign-in is not set up yet (frontend/src/firebase-config.js).</p>}
             {error && <Notice tone="bad" className="mt-3 whitespace-pre-wrap">{error}</Notice>}
 
-            <div className="my-4 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-3" aria-hidden="true">
+            <div className="my-4 flex items-center gap-3 font-mono text-xs uppercase tracking-[0.12em] text-ink-3" aria-hidden="true">
               <span className="flex-1 border-t border-line"></span>or<span className="flex-1 border-t border-line"></span>
             </div>
 
@@ -81,7 +81,7 @@ export default function Login({ online, canSignIn, error, onGitHub, onOffline })
         </div>
       </main>
 
-      <footer className="px-4 py-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-ink-3">Hackathon project · HNX26PSI09</footer>
+      <footer className="px-4 py-4 text-center font-mono text-xs uppercase tracking-[0.12em] text-ink-3">Hackathon project · HNX26PSI09</footer>
     </div>
   );
 }

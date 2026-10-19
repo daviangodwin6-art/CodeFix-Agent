@@ -52,7 +52,7 @@ export function Steps({ run, steps }) {
                   <span className={"font-mono text-xs uppercase tracking-[0.06em] break-words min-w-0 " + v.title}>
                     {String(i + 1).padStart(2, "0")}. {s.name}<span className="sr-only"> ({v.label})</span>
                   </span>
-                  {side && <span className={"ml-auto text-right font-mono text-[11px] uppercase tracking-[0.08em] " + v.side}>{side}</span>}
+                  {side && <span className={"ml-auto text-right font-mono text-xs uppercase tracking-[0.08em] " + v.side}>{side}</span>}
                 </div>
                 {detail && !inline && <p className={"text-xs mt-0.5 break-words " + (s.status === "error" ? v.side : "text-ink-2")}>{detail}</p>}
               </div>
