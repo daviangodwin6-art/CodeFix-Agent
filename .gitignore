@@ -7,5 +7,6 @@ __pycache__/
 .pytest_cache/
 *.pyc
 frontend/node_modules/
-.claude/
+.claude/*
+!.claude/skills/
 CLAUDE.md
