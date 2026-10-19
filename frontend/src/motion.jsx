@@ -21,10 +21,12 @@ export function MotionToggle({ className = "" }) {
   }
   return (
     <button type="button" role="switch" aria-checked={on} onClick={toggle} title="Turn animations on or off"
-            className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full h-8 px-3 text-xs font-medium border transition-colors " +
-              (on ? "border-accent-fg/30 bg-accent-fg/10 text-accent-fg " : "border-line-strong bg-raised text-ink-2 ") + className}>
-      <span aria-hidden="true" className="material-symbols-outlined text-base">animation</span>
+            className={"inline-flex items-center gap-2 whitespace-nowrap rounded-sm h-8 px-2.5 border bg-surface font-mono text-[11px] font-semibold uppercase tracking-[0.1em] transition-colors hover:border-accent-fg " +
+              (on ? "border-line text-accent-fg " : "border-line text-ink-2 ") + className}>
       <span>Motion {on ? "on" : "off"}</span>
+      <span aria-hidden="true" className={"relative w-8 h-4 rounded-sm border shrink-0 transition-colors " + (on ? "border-accent-fg bg-accent-fg/20" : "border-line-strong bg-canvas")}>
+        <span className={"absolute top-0.5 w-2.5 h-2.5 rounded-full transition-[left,background-color] " + (on ? "left-[18px] bg-accent-fg shadow-glow-cyan" : "left-0.5 bg-line-strong")}></span>
+      </span>
     </button>
   );
 }

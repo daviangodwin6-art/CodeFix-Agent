@@ -2,21 +2,23 @@ import { useRef } from "react";
 import { animate, utils } from "animejs";
 import { finished } from "../api.js";
 import { enter, pop, useAnime, useChanged } from "../motion.jsx";
-import { CARD, duration, Icon, plural, short, Spinner } from "./ui.jsx";
+import { CARD, CARD_CORNERS, duration, Icon, PanelTitle, plural, short, Spinner, Stat } from "./ui.jsx";
 
 const envReused = (step) => step.name === "environment" && step.status === "ok" && /reused/i.test(step.detail || "");
 
+const NODE = "w-6 h-6 rounded-sm border flex items-center justify-center shrink-0 ";
 // How one step is drawn. A rejected attempt that was followed by another attempt is a "retry", not a failure.
 function look(step, retried) {
-  if (envReused(step)) return { icon: "check", node: "bg-ok/10 border-ok/30 text-ok", title: "text-ink", side: "text-ok font-medium", label: "done" };
-  if (step.status === "ok") return { icon: "check", node: "bg-ok/10 border-ok/30 text-ok", title: "text-ink", side: "text-ink-3", label: "done" };
-  if (step.status === "running") return { spin: true, node: "border-accent-fg text-accent-fg pulse-ring", title: "text-accent-fg font-medium", side: "text-accent-fg", tag: "running…", label: "running" };
-  if (step.status === "error" && retried) return { icon: "warning", node: "bg-warn/10 border-warn/30 text-warn", title: "text-warn", side: "text-warn", tag: "retry", label: "retry" };
-  if (step.status === "error") return { icon: "close", node: "bg-bad/10 border-bad/30 text-bad", title: "text-bad", side: "text-bad", tag: "failed", label: "failed" };
-  return { node: "border-line-strong text-ink-3", title: "text-ink-3", side: "text-ink-3", tag: "pending", label: "pending" };
+  if (envReused(step)) return { icon: "check", node: NODE + "bg-ok/10 border-ok/40 text-ok", title: "text-ink", side: "text-ok", label: "done" };
+  if (step.status === "ok") return { icon: "check", node: NODE + "bg-ok/10 border-ok/40 text-ok", title: "text-ink", side: "text-ink-2", label: "done" };
+  // motion: a scanline sweeping across the running row would go here
+  if (step.status === "running") return { spin: true, node: NODE + "bg-accent-fg/10 border-accent-fg text-accent-fg shadow-glow-cyan pulse-ring", title: "text-ink font-semibold", side: "text-accent-fg", tag: "running…", label: "running", row: "bg-raised border-l-accent" };
+  if (step.status === "error" && retried) return { icon: "warning", node: NODE + "bg-warn/10 border-warn/40 text-warn", title: "text-warn", side: "text-warn", tag: "retry", label: "retry" };
+  if (step.status === "error") return { icon: "close", node: NODE + "bg-bad/10 border-bad/40 text-bad", title: "text-bad", side: "text-bad", tag: "failed", label: "failed" };
+  return { node: NODE + "border-line-strong text-ink-3", title: "text-ink-3", side: "text-ink-3", tag: "pending", label: "pending" };
 }
 
-// Vertical timeline of the run's steps.
+// "Execution sequence": numbered rows, mono state text on the right, red rail + cyan pip on the running one.
 export function Steps({ run, steps }) {
   const list = useRef(null);
   const { first, changed, key } = useChanged(steps.map((s) => s.name + s.status));
@@ -30,30 +32,27 @@ export function Steps({ run, steps }) {
   }, [key]);
 
   return (
-    <section aria-labelledby="steps-title" className={CARD + " p-5 min-w-0 xl:sticky xl:top-20"}>
-      <h2 id="steps-title" className="text-base font-semibold text-ink mb-4">Steps</h2>
-      <ol ref={list}>
+    <section aria-labelledby="steps-title" className={CARD + " p-4 sm:p-5 min-w-0 xl:sticky xl:top-20"}>
+      <PanelTitle icon="account_tree" id="steps-title" meta={plural(steps.length, "step")} className="mb-4">Execution sequence</PanelTitle>
+      <ol ref={list} className="flex flex-col gap-1">
         {steps.map((s, i) => {
           const retried = !finished(run) || steps.slice(i + 1).some((later) => later.status !== "pending");
           const v = look(s, retried);
           const detail = s.detail || "";
           const inline = s.status === "ok" && detail.length <= 24; // short details sit on the right, long ones wrap below
           const side = v.tag || [inline && detail, duration(s.duration_s)].filter(Boolean).join(" · ");
-          const last = i === steps.length - 1;
           return (
-            <li key={i} aria-current={s.status === "running" ? "step" : undefined} className="flex gap-3">
-              <div className="flex flex-col items-center">
-                <span data-node className={"w-6 h-6 rounded-full border flex items-center justify-center shrink-0 " + v.node}>
-                  {v.icon ? <Icon name={v.icon} className="text-base" /> : v.spin ? <Spinner className="text-base" /> : null}
-                </span>
-                {!last && <span aria-hidden="true" className="w-px flex-1 bg-line my-1 min-h-3" />}
-              </div>
-              <div className={"min-w-0 flex-1 " + (last ? "" : "pb-3")}>
-                <div className="flex items-center justify-between gap-3 min-h-6">
-                  <span className={"font-mono text-sm break-words min-w-0 " + v.title}>
-                    {i + 1}. {s.name}<span className="sr-only"> ({v.label})</span>
+            <li key={i} aria-current={s.status === "running" ? "step" : undefined}
+                className={"flex items-start gap-3 rounded-sm border border-transparent border-l-2 px-2.5 py-2 " + (v.row || "border-l-transparent")}>
+              <span data-node className={v.node}>
+                {v.icon ? <Icon name={v.icon} className="text-base" /> : v.spin ? <Spinner className="text-base" /> : null}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 min-h-6">
+                  <span className={"font-mono text-xs uppercase tracking-[0.06em] break-words min-w-0 " + v.title}>
+                    {String(i + 1).padStart(2, "0")}. {s.name}<span className="sr-only"> ({v.label})</span>
                   </span>
-                  {side && <span className={"text-xs shrink-0 " + v.side}>{side}</span>}
+                  {side && <span className={"ml-auto text-right font-mono text-[11px] uppercase tracking-[0.08em] " + v.side}>{side}</span>}
                 </div>
                 {detail && !inline && <p className={"text-xs mt-0.5 break-words " + (s.status === "error" ? v.side : "text-ink-2")}>{detail}</p>}
               </div>
@@ -81,18 +80,13 @@ export function BuildsOn({ project: p, run }) {
     ["Environment", env || "checking…", /reused/i.test(env) ? "text-ok" : env ? "text-ink" : "text-ink-3"],
   ];
   return (
-    <section aria-labelledby="builds-title" className={CARD + " p-5 min-w-0"}>
-      <h2 id="builds-title" className="text-base font-semibold text-ink">What this run builds on</h2>
-      <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-        {rows.map(([label, value, tone]) => (
-          <div key={label} className="min-w-0">
-            <dt className="text-xs text-ink-3">{label}</dt>
-            <dd className={"mt-0.5 font-mono text-sm break-words " + (tone || "text-ink")}>{value || "…"}</dd>
-          </div>
-        ))}
+    <section aria-labelledby="builds-title" className={CARD_CORNERS + " p-4 sm:p-5 min-w-0"}>
+      <PanelTitle icon="layers" id="builds-title" meta={head && "HEAD " + short(head)}>What this run builds on</PanelTitle>
+      <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+        {rows.map(([label, value, tone]) => <Stat key={label} label={label} tone={tone}>{value || "…"}</Stat>)}
       </dl>
       {head && (
-        <p className="mt-4 rounded-lg border border-line bg-raised px-3.5 py-3 text-sm text-ink-2">
+        <p className="hud-well mt-3 px-3.5 py-3 text-sm text-ink-2">
           If this run fails, the project goes back to {short(head)}. Nothing half-applied is kept.
         </p>
       )}

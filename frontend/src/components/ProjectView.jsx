@@ -3,16 +3,20 @@ import { api, isHttps, post } from "../api.js";
 import { enter, useAnime } from "../motion.jsx";
 import RunView, { Changes } from "./Results.jsx";
 import {
-  ago, button, CARD, ConfirmDialog, Dialog, duration, FIELD, Icon, KindBadge, Notice, plural, short, Skeleton, Spinner, StatusPill,
+  ago, button, CARD, CARD_CORNERS, ConfirmDialog, Dialog, duration, FIELD, Icon, KindBadge, LABEL, Notice, PanelTitle, plural, short,
+  Skeleton, Spinner, Stat, StatusPill,
 } from "./ui.jsx";
 
 const MODE = { debug: "Debug", feature: "Feature" };
 const TONE = { emerald: "ok", amber: "warn", rose: "bad", slate: "info" };
-const MENU_ITEM = "flex w-full items-center gap-2 rounded-md px-3 h-9 text-left text-sm text-ink hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed";
+// Level-2 menu rows (the danger row adds text-bad).
+const MENU_ITEM = "flex w-full items-center gap-2 rounded-sm px-3 h-9 text-left font-mono text-xs font-semibold uppercase tracking-[0.08em] enabled:hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed";
+const TAB = "flex items-center gap-2 px-3 h-10 font-mono text-xs font-semibold uppercase tracking-[0.1em] border-b-2 -mb-px ";
+const ROW = "rounded-sm border border-line bg-canvas/40 hover:bg-raised ";
 
 function runMeta(r) {
   const live = r.status === "running";
-  return [r.run_id, MODE[r.mode] || r.mode, duration(r.duration_s),
+  return [MODE[r.mode] || r.mode, duration(r.duration_s),
     r.syntax_stage ? "syntax stage" : r.attempts != null && plural(r.attempts, "attempt"),
     !live && (r.commit_sha ? "commit " + short(r.commit_sha) : "head unchanged"),
     r.env_status && "env " + r.env_status + (r.env_reason ? " (" + r.env_reason + ")" : "")].filter(Boolean).join(" · ");
@@ -47,15 +51,15 @@ function ResetDialog({ p, url, onClose, onDone }) {
             Choose the point to go back to. Later changes leave the project branch, but they are not deleted.
           </p>
           <fieldset className="mt-4">
-            <legend className="text-sm font-semibold text-ink mb-2">Reset to</legend>
+            <legend className={LABEL + " mb-2"}>Reset to</legend>
             <div className="flex flex-col gap-2 max-h-[40vh] overflow-auto">
               {choices.map((c) => (
-                <label key={c.id} className={"flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer bg-raised " +
-                  (to === c.id ? "border-accent-fg" : "border-line hover:border-line-strong")}>
+                <label key={c.id} className={"flex items-center gap-3 rounded-sm border border-l-2 px-4 py-3 cursor-pointer " +
+                  (to === c.id ? "border-accent-fg/40 border-l-accent-fg bg-canvas" : "border-line border-l-line bg-surface hover:bg-canvas hover:border-l-line-strong")}>
                   <input type="radio" name="reset-to" value={c.id} checked={to === c.id} data-autofocus={to === c.id ? "" : undefined} onChange={() => setTo(c.id)} className="w-4 h-4 accent-accent shrink-0" />
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-ink break-words">{c.title}</span>
-                    <span className="block mt-0.5 font-mono text-xs text-ink-3 break-words">{c.meta}</span>
+                    <span className="block mt-0.5 font-mono text-xs text-ink-2 break-words">{c.meta}</span>
                   </span>
                 </label>
               ))}
@@ -107,10 +111,13 @@ function DeleteDialog({ p, url, onClose, onDone }) {
             {p.kind === "local" ? " Your original folder is not touched." : " The repository on GitHub is not touched."} This cannot be undone.
           </p>
           <label htmlFor="delete-confirm" className="block mt-4 text-sm font-semibold text-ink break-words">
-            Type <span className="font-mono">{p.display_name}</span> to confirm
+            Type <span className="font-mono text-gold">{p.display_name}</span> to confirm
           </label>
-          <input id="delete-confirm" type="text" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" spellCheck="false"
-                 className={FIELD + " mt-2 h-9 font-mono"} />
+          <div className="relative mt-2">
+            <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-ink-3">&gt;</span>
+            <input id="delete-confirm" type="text" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" spellCheck="false"
+                   className={FIELD + " h-10 pl-7 font-mono"} />
+          </div>
           {error && <p role="alert" className="mt-3 text-sm text-bad break-words">{error}</p>}
           <div className="mt-5 flex justify-end gap-2">
             <button type="button" onClick={close} className={button("secondary")}>Cancel</button>
@@ -233,13 +240,20 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
     );
   }
 
+  const ahead = p.changes_ahead_of_base;
   const tiles = [
     ["Branch", p.branch, "text-ink"],
-    ["Head", short(p.head_sha), "text-ink"],
-    ["Ahead of base", plural(p.changes_ahead_of_base, "change"), "text-ink"],
+    ["Head", short(p.head_sha), "text-gold"],
+    ["Ahead of base", plural(ahead, "change"), ahead > 0 ? "text-gold" : "text-ink"],
     ["Environment", env.state === "ready" ? "ready" + (env.python ? " · py" + env.python : "") : env.state === "evicted" ? "evicted" : "not built yet",
-      env.state === "ready" ? "text-ok" : "text-ink"],
+      env.state === "ready" ? "text-ok" : env.state === "evicted" ? "text-warn" : "text-ink"],
     ["Locked tests", tests.total + " (" + tests.added_by_runs + " added by runs)", "text-ink"],
+  ];
+  // Real facts only, joined with decorative "::" separators.
+  const facts = [
+    [p.branch, "text-accent-fg"],
+    ["head " + short(p.head_sha), "text-gold"],
+    [plural(ahead, "change") + " ahead", "text-ink"],
   ];
   const tabLabel = { history: "History", changes: "Changes", activity: "Activity" };
   const tabCount = { history: p.runs ? p.runs.length : null, changes: null, activity: events.length };
@@ -248,15 +262,25 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
   return (
     <div className="flex flex-col gap-4 min-w-0">
       <section aria-labelledby="view-title" className={CARD + " p-5 sm:p-6 min-w-0"}>
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 id="view-title" tabIndex={-1} className="text-2xl font-semibold tracking-tight text-ink truncate">{p.display_name}</h1>
+        <p className={LABEL + " flex items-center gap-1.5"}><Icon name="folder_open" className="text-base text-accent-fg" />Project</p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 min-w-0">
+          <h1 id="view-title" tabIndex={-1} className="min-w-0 break-words font-display text-2xl sm:text-3xl font-bold tracking-tight text-ink">{p.display_name}</h1>
           <KindBadge kind={p.kind} />
         </div>
         <p className="mt-1 font-mono text-xs text-ink-3 break-words">
           {local ? "Snapshot of " + p.source + " · your original folder is unchanged" : p.source}
         </p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs">
+          {facts.map(([text, tone], i) => (
+            <span key={i} className="inline-flex items-center gap-2 min-w-0">
+              {i > 0 && <span aria-hidden="true" className="text-ink-3">::</span>}
+              <span className={"break-all " + tone}>{text}</span>
+            </span>
+          ))}
+        </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        {/* command matrix: primary action red, the rest telemetry buttons */}
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           {local ? (
             <button type="button" disabled={disabled} onClick={() => runExport(false)} className={button("primary")}>
               {spin("export") || <Icon name="download" className="text-base" />}Export patch
@@ -269,22 +293,22 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
               <button type="button" disabled={disabled} onClick={sync} className={button("secondary")}>
                 {spin("sync") || <Icon name="sync" className="text-base" />}Sync with upstream
               </button>
-              {isHttps(p.pr_url) && <a href={p.pr_url} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-fg underline">View pull request</a>}
+              {isHttps(p.pr_url) && <a href={p.pr_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-xs font-semibold uppercase tracking-[0.08em] text-accent-fg underline underline-offset-4">View pull request<Icon name="open_in_new" className="text-base" /></a>}
             </>
           )}
           <button ref={menuBtn} type="button" popoverTarget={menuId} aria-haspopup="menu" aria-label="More project actions" className={button("secondary")}>
             {spin("env") || <Icon name="more_horiz" className="text-base" />}More
           </button>
           <div ref={menu} id={menuId} popover="auto" role="menu" onToggle={placeMenu}
-               className="m-0 fixed bg-raised border border-line rounded-lg p-1 w-56 shadow-xl text-ink">
-            <button type="button" role="menuitem" disabled={disabled || !p.runs} onClick={fromMenu(() => setDialog("reset"))} className={MENU_ITEM}>
+               className="m-0 fixed bg-raised border border-line rounded-sm p-1 w-56 shadow-aura text-ink">
+            <button type="button" role="menuitem" disabled={disabled || !p.runs} onClick={fromMenu(() => setDialog("reset"))} className={MENU_ITEM + " text-ink enabled:hover:text-accent-fg"}>
               <Icon name="history" className="text-base" />Reset to…
             </button>
-            <button type="button" role="menuitem" disabled={disabled} onClick={fromMenu(rebuild)} className={MENU_ITEM}>
+            <button type="button" role="menuitem" disabled={disabled} onClick={fromMenu(rebuild)} className={MENU_ITEM + " text-ink enabled:hover:text-accent-fg"}>
               <Icon name="build" className="text-base" />Rebuild environment
             </button>
             <div role="separator" className="my-1 border-t border-line" />
-            <button type="button" role="menuitem" disabled={disabled} onClick={fromMenu(() => setDialog("delete"))} className={MENU_ITEM + " !text-bad"}>
+            <button type="button" role="menuitem" disabled={disabled} onClick={fromMenu(() => setDialog("delete"))} className={MENU_ITEM + " text-bad"}>
               <Icon name="delete" className="text-base" />Delete project
             </button>
           </div>
@@ -310,27 +334,23 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
 
       <dl className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
         {tiles.map(([label, value, tone]) => (
-          <div key={label} className="rounded-lg border border-line bg-surface p-3 min-w-0">
-            <dt className="text-xs text-ink-3">{label}</dt>
-            <dd className={"mt-1 font-mono text-sm break-words " + tone}>{value}</dd>
-          </div>
+          <Stat key={label} label={label} tone={tone}>{value}</Stat>
         ))}
       </dl>
 
-      <section aria-labelledby="compose-title" className={CARD + " p-5 sm:p-6 min-w-0"}>
-        <h2 id="compose-title" className="text-base font-semibold text-ink mb-4">Run a new task</h2>
+      <section aria-labelledby="compose-title" className={CARD_CORNERS + " hud-corners-red p-5 sm:p-6 min-w-0"}>
+        <PanelTitle id="compose-title" icon="terminal" className="mb-4">Run a new task</PanelTitle>
         {composer}
       </section>
 
       <section className={CARD + " min-w-0"}>
-        <div role="tablist" aria-label="Project details" onKeyDown={onTabKey} className="flex gap-1 border-b border-line px-3 pt-2">
+        <div role="tablist" aria-label="Project details" onKeyDown={onTabKey} className="flex flex-wrap gap-1 border-b border-line px-3 pt-2">
           {TABS.map((t) => (
             <button key={t} ref={(el) => (tabRefs.current[t] = el)} type="button" role="tab" id={"tab-" + t} aria-selected={tab === t} aria-controls={"panel-" + t}
                     tabIndex={tab === t ? 0 : -1} onClick={() => setTab(t)}
-                    className={"flex items-center gap-2 px-3 h-10 text-sm font-medium border-b-2 -mb-px " +
-                      (tab === t ? "border-accent-fg text-ink" : "border-transparent text-ink-3 hover:text-ink")}>
+                    className={TAB + (tab === t ? "border-accent-fg bg-raised text-ink" : "border-transparent text-ink-3 hover:text-ink hover:bg-raised/50")}>
               {tabLabel[t]}
-              {tabCount[t] != null && <span className="rounded-full bg-raised border border-line px-1.5 text-xs text-ink-2">{tabCount[t]}</span>}
+              {tabCount[t] != null && <span className="text-gold">{tabCount[t]}</span>}
             </button>
           ))}
         </div>
@@ -343,23 +363,25 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
           ) : !p.runs.length ? <p className="text-sm text-ink-3">No runs yet. Describe a task above to start one.</p> : (
             <ol ref={history} className="flex flex-col gap-2">
               {p.runs.map((r) => (
-                <li key={r.run_id} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-line bg-canvas/40 px-4 py-3">
+                <li key={r.run_id} className={ROW + "flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"}>
                   <StatusPill status={r.status} />
                   <button type="button" title="Show this run's stored result" disabled={r.status === "running" || !!working} onClick={() => openRun(r)}
-                          className="group flex-1 min-w-[12rem] text-left rounded disabled:cursor-not-allowed">
-                    <span className="block text-sm font-medium text-ink truncate group-enabled:group-hover:text-accent-fg">{r.task}</span>
+                          className="group flex-1 min-w-[12rem] text-left rounded-sm disabled:cursor-not-allowed">
+                    <span className="block font-mono text-sm text-ink truncate group-enabled:group-hover:text-accent-fg">
+                      <span className="text-gold">RUN {r.run_id}</span><span aria-hidden="true" className="text-ink-3"> :: </span>{r.task}
+                    </span>
                     <span className="block mt-0.5 font-mono text-xs text-ink-3 break-words">{runMeta(r)}</span>
                   </button>
                   {r.status === "running"
                     ? <button type="button" onClick={onWatch} className={button("secondary", "sm")}>Show live</button>
-                    : <button type="button" onClick={() => onRerun(r)} aria-label={"Re-run task: " + r.task} className={button("ghost", "sm")}>
+                    : <button type="button" onClick={() => onRerun(r)} aria-label={"Re-run task: " + r.task} className={button("secondary", "sm")}>
                         <Icon name="replay" className="text-base" />Re-run
                       </button>}
                 </li>
               ))}
             </ol>
           )}
-          <p className="mt-4 font-mono text-xs text-ink-3 break-words">
+          <p className="mt-4 border-t border-line pt-3 font-mono text-xs text-ink-3 break-words">
             {["base", p.base_label || p.base_ref, short(p.base_sha)].filter(Boolean).join(" · ")}
           </p>
         </div>
@@ -369,8 +391,8 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
             <div className="flex flex-col gap-3" aria-busy="true"><Skeleton className="h-6 w-1/2" /><Skeleton className="h-40" /></div>
           ) : diff.error ? <Notice tone="bad">{diff.error}</Notice> : (
             <>
-              <p className="mb-3 font-mono text-xs text-ink-3 break-words">
-                {"base " + short(p.base_sha) + " → head " + short(p.head_sha) + " · " + plural(p.changes_ahead_of_base, "change")}
+              <p className="mb-3 font-mono text-xs text-ink-2 break-words">
+                base <span className="text-gold">{short(p.base_sha)}</span> → head <span className="text-gold">{short(p.head_sha)}</span> · {plural(p.changes_ahead_of_base, "change")}
               </p>
               {diff.text.trim() ? <Changes r={{ diff: diff.text }} /> : <p className="text-sm text-ink-3">No changes ahead of base.</p>}
             </>
@@ -379,8 +401,13 @@ export default function ProjectView({ project: p, composer, onChanged, onDeleted
 
         <div role="tabpanel" id="panel-activity" aria-labelledby="tab-activity" hidden={tab !== "activity"} className="p-5 sm:p-6">
           {events.length ? ( // resets, syncs and exports are not runs: they are listed here
-            <ul aria-label="Project events" className="flex flex-col gap-1.5 font-mono text-xs text-ink-2">
-              {events.map((e, i) => <li key={i} className="break-words">{[e.kind, e.detail, ago(e.at)].filter(Boolean).join(" · ")}</li>)}
+            <ul aria-label="Project events" className="flex flex-col gap-2 font-mono text-xs text-ink-2">
+              {events.map((e, i) => (
+                <li key={i} className={ROW + "px-3 py-2 break-words"}>
+                  <code className="font-semibold text-gold">{e.kind}</code>
+                  {[e.detail, ago(e.at)].filter(Boolean).map((t, j) => <span key={j}><span aria-hidden="true" className="text-ink-3"> :: </span>{t}</span>)}
+                </li>
+              ))}
             </ul>
           ) : <p className="text-sm text-ink-3">No resets, syncs or exports yet.</p>}
         </div>
