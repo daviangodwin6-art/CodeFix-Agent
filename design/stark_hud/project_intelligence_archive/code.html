@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#343942","surface-container-lowest":"#090e16","on-primary-fixed-variant":"#93000e","on-secondary-container":"#392600","surface-container":"#1b2028","surface":"#0f141c","error-container":"#93000a","on-secondary-fixed":"#271900","inverse-primary":"#c00016","on-surface":"#dee2ee","on-background":"#dee2ee","on-error":"#690005","on-tertiary-fixed":"#001f25","tertiary-fixed":"#a4eeff","tertiary-fixed-dim":"#5bd6ee","outline":"#ad8884","error":"#ffb4ab","on-primary-container":"#ffffff","on-secondary-fixed-variant":"#5e4200","on-primary-fixed":"#410003","tertiary-container":"#008294","secondary":"#f9bc45","primary-fixed":"#ffdad6","outline-variant":"#5d3f3c","primary-fixed-dim":"#ffb4ac","surface-variant":"#30353e","primary-container":"#e62429","surface-container-highest":"#30353e","surface-container-high":"#252a33","secondary-fixed":"#ffdea8","on-primary":"#690007","tertiary":"#5bd6ee","inverse-surface":"#dee2ee","on-tertiary-container":"#ffffff","primary":"#ffb4ac","background":"#0f141c","on-tertiary":"#00363f","secondary-container":"#bc8708","on-tertiary-fixed-variant":"#004e5a","surface-tint":"#ffb4ac","surface-dim":"#0f141c","on-secondary":"#422d00","surface-container-low":"#171c24","inverse-on-surface":"#2c3139","on-surface-variant":"#e7bdb8","on-error-container":"#ffdad6","secondary-fixed-dim":"#f9bc45"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-sm":"0.5rem","space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem","gutter":"1.5rem","space-xs":"0.25rem","gutter-mobile":"0.75rem","margin":"2rem","space-lg":"1.5rem"},fontFamily:{"code-sm":["JetBrains Mono"],"body-lg":["Inter"],"label-md":["JetBrains Mono"],"code-lg":["JetBrains Mono"],"label-sm":["JetBrains Mono"],"headline-lg-mobile":["Space Grotesk"],"headline-lg":["Space Grotesk"],"headline-md":["Space Grotesk"],"body-md":["Inter"],"display-lg-mobile":["Space Grotesk"],"body-sm":["Inter"],"headline-sm":["Space Grotesk"],"display-lg":["Space Grotesk"]},fontSize:{"code-sm":["12px",{"lineHeight":"18px","letterSpacing":"0","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"16px","letterSpacing":"0.08em","fontWeight":"600"}],"code-lg":["14px",{"lineHeight":"22px","letterSpacing":"-0.01em","fontWeight":"500"}],"label-sm":["9px",{"lineHeight":"12px","letterSpacing":"0.12em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0.01em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}};</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.6)]"><div class="h-14 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><img alt="Stark Arc Reactor Emblem" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XM-DsF3d18SZOCextYpMzIatKO7an6AH34xKl1gRAjc_uS0UdOkBGo9KwkAAwwfYd5iu7kGRKKUSVy2bHpSuYLolEl3BoqAjn_u54b6g15V9vdPdnnAllflUdLTOfoYAeh2mGU_oNdHubuqd700ADnNugiQn1X1yROlp0EWSe-WuZ8-R_onte4IiJdyR69kDHsr3SJUWI5uurAiK9shVWF53mx2QN68RfR6Wvfx2xKahJH2yklHntYywE"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm tracking-wide text-on-surface">CODEFIX AGENT</span><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-DEFAULT bg-primary-container text-on-primary-container uppercase font-semibold">HUD v4.2</span></div><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Stark Industries Flight Deck Diagnostics</span></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container-high"><span class="material-symbols-outlined text-secondary text-[14px]">deployed_code</span><span class="font-code-sm text-code-sm text-on-surface">stark-core/mark-85-flight-os</span><span class="font-label-sm text-label-sm text-on-surface-variant">::</span><span class="font-code-sm text-code-sm text-secondary">branch: main</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-label-md text-label-md text-tertiary uppercase">API Online // 42ms</span></div><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container-low"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Motion</span><button class="w-8 h-4 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-all" type="button"><span class="w-3 h-3 rounded-full bg-on-primary-container shadow"></span></button></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden sm:flex flex-col text-right"><span class="font-label-md text-label-md text-on-surface">T. STARK // ENG-01</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase">AUTH::STARK_SEC_CLEARANCE_A1</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><aside class="fixed left-0 top-14 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md shadow-[1px_0_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col gap-space-sm"><div class="px-space-md py-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Mission Command</span><span class="font-code-sm text-code-sm text-secondary">0x85A</span></div><nav class="flex flex-col gap-1 px-space-sm" data-active-classes="bg-primary-container text-on-primary-container font-semibold shadow-[0_0_12px_rgba(230,36,41,0.35)]"><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="system-overview" href="#"><span class="material-symbols-outlined text-[20px]">memory</span><span class="font-label-md text-label-md uppercase tracking-wider">System Access</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="engineering-console" href="#"><span class="material-symbols-outlined text-[20px]">terminal</span><span class="font-label-md text-label-md uppercase tracking-wider">Engineering Console</span></a><a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT transition-all bg-primary-container text-on-primary-container font-semibold shadow-[0_0_12px_rgba(230,36,41,0.35)]" data-path="project-intelligence" href="#"><span class="material-symbols-outlined text-[20px]">account_tree</span><span class="font-label-md text-label-md uppercase tracking-wider">Project Intelligence</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="live-execution-hud" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-md text-label-md uppercase tracking-wider">Live Execution HUD</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="verification-and-diff" href="#"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="font-label-md text-label-md uppercase tracking-wider">Verification &amp; Diff</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="settings-and-telemetry" href="#"><span class="material-symbols-outlined text-[20px]">tune</span><span class="font-label-md text-label-md uppercase tracking-wider">Settings &amp; Telemetry</span></a></nav></div><div class="px-space-md flex flex-col gap-space-xs"><div class="p-space-sm rounded-DEFAULT bg-surface-container-low"><div class="flex items-center justify-between mb-1"><span class="font-label-sm text-label-sm text-secondary uppercase">Reactor Core Output</span><span class="font-code-sm text-code-sm text-secondary">98.4%</span></div><div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden"><div class="h-full w-[98%] bg-secondary shadow-[0_0_8px_rgba(249,188,69,0.8)]"></div></div></div><div class="text-center"><span class="font-label-sm text-label-sm text-on-surface-variant opacity-60">AUTONOMOUS REMEDIATION PROTOCOL</span></div></div></aside><aside class="fixed right-0 top-14 bottom-0 w-80 bg-surface-container-lowest z-40 hidden 2xl:flex flex-col justify-between py-space-md px-space-md shadow-[-1px_0_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col gap-space-md"><div class="flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-primary text-[18px]">archive</span><span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Engineering Archive</span></div><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-surface-container-high text-tertiary uppercase">LOCKED</span></div><div class="p-space-sm rounded-DEFAULT bg-surface-container-low flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase">Active Target Workspace</span><div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface"><span class="font-semibold">mark-85-flight-os</span><span class="text-secondary">v4.2.19</span></div><div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm"><span>Branch: release/stabilize-hud</span><span class="material-symbols-outlined text-[14px]">swap_horiz</span></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Runtime Environment Diagnostics</span><div class="flex flex-col gap-1"><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Docker Container</span><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold">HEALTHY</span></div><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Compiler Runtime</span><span class="font-code-sm text-code-sm text-secondary">Python 3.11</span></div><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Regression Suite</span><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold">PYTEST LOCKED</span></div></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Remediation Telemetry</span><div class="grid grid-cols-3 gap-space-xs"><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-on-surface">14</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Runs</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-secondary">12</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Fixed</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-tertiary">100%</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Pass</div></div></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Telemetry Feed</span><div class="flex flex-col gap-1"><div class="p-space-xs rounded-DEFAULT bg-surface-container font-code-sm text-code-sm"><div class="text-tertiary">[PATCH::COMMITTED]</div><div class="text-on-surface-variant">thruster_vector_sync.py</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container font-code-sm text-code-sm"><div class="text-secondary">[AST::PARSED]</div><div class="text-on-surface-variant">avionics_matrix.cpp:482</div></div></div></div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container-high text-center"><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold tracking-widest">Telemetry Linked // Satellite Uplink</span></div></aside><div class="pl-64 2xl:pr-80"><main class="relative pt-14 min-h-screen bg-background w-full px-space-md"><div class="relative w-full py-space-md"><div class="absolute top-2 left-2 font-code-sm text-code-sm text-tertiary opacity-40 select-none">[LAT 34.0049° N, LONG 118.8076° W]</div><div class="absolute top-2 right-2 font-code-sm text-code-sm text-secondary opacity-40 select-none">SEC::MARK-85-CALIBRATED</div><div class="flex flex-col w-full gap-space-lg">
+<div class="relative w-full rounded-DEFAULT bg-surface-container-low p-space-md shadow-xl overflow-hidden">
+<div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-tertiary-container/10 blur-3xl pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md relative z-10">
+<div class="flex flex-1 items-center bg-surface-container-lowest rounded-DEFAULT px-space-md py-space-sm shadow-inner group focus-within:ring-0">
+<span class="material-symbols-outlined text-tertiary text-[20px] mr-space-sm group-focus-within:animate-pulse">search</span>
+<input class="w-full bg-transparent font-code-sm text-code-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none" id="repo-search-input" placeholder="Filter active repositories by name, branch, or status..." type="text"/>
+<div class="hidden sm:flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant/60 bg-surface-container px-1.5 py-0.5 rounded-DEFAULT">
+<span class="text-tertiary">ESC</span> CLEAR
+        </div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<div class="flex flex-col bg-surface-container px-space-md py-space-xs rounded-DEFAULT shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Repositories</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface">12</span>
+<span class="font-label-sm text-label-sm text-tertiary">SYNCED</span>
+</div>
+</div>
+<div class="flex flex-col bg-surface-container px-space-md py-space-xs rounded-DEFAULT shadow-sm">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Active Repairs</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="font-headline-sm text-headline-sm text-secondary">3</span>
+<span class="font-label-sm text-label-sm text-secondary animate-pulse">RUNNING</span>
+</div>
+</div>
+<div class="flex flex-col bg-surface-container px-space-md py-space-xs rounded-DEFAULT shadow-sm">
+<span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Verified Patches</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="font-headline-sm text-headline-sm text-on-surface">87</span>
+<span class="font-label-sm text-label-sm text-tertiary">100% PASS</span>
+</div>
+</div>
+<div class="flex flex-col bg-surface-container px-space-md py-space-xs rounded-DEFAULT shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Docker Sandbox</span>
+<div class="flex items-baseline gap-space-xs mt-0.5">
+<span class="font-headline-sm text-headline-sm text-tertiary">READY</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<div class="xl:col-span-5 flex flex-col gap-space-md">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[18px]">terminal</span>
+<span class="font-label-md text-label-md uppercase text-on-surface tracking-widest">Inventory Ledger</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">4 MATCHING TARGETS</span>
+</div>
+<div class="flex flex-col gap-space-sm" id="repo-list">
+<div class="repo-item cursor-pointer p-space-md rounded-DEFAULT bg-surface-container-high transition-all shadow-md relative overflow-hidden group" data-repo-id="mark-85" onclick="selectRepo('mark-85')">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary shadow-[0_0_8px_rgba(91,214,238,0.8)]"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[16px]">folder_special</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">stark-core/mark-85-flight-os</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-tertiary pl-6">
+<span class="material-symbols-outlined text-[14px]">fork_right</span>
+<span>feat/nanotech-mesh</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm uppercase px-space-xs py-0.5 rounded-DEFAULT bg-tertiary-container text-on-tertiary font-bold tracking-wider">
+              Repaired
+            </span>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs text-on-surface-variant font-code-sm text-code-sm bg-surface-container-lowest/60 px-space-sm py-1 rounded-DEFAULT">
+<div class="flex items-center gap-space-md">
+<span>Runs: <strong class="text-on-surface font-semibold">24</strong></span>
+<span class="text-secondary font-semibold">Ahead: +4</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary tracking-widest uppercase">ACTIVE TARGET</span>
+</div>
+</div>
+<div class="repo-item cursor-pointer p-space-md rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all shadow-sm relative overflow-hidden group" data-repo-id="arc-reactor" onclick="selectRepo('arc-reactor')">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-tertiary/40"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">folder</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">stark-industries/arc-reactor-telemetry</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant pl-6">
+<span class="material-symbols-outlined text-[14px]">fork_right</span>
+<span>main</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm uppercase px-space-xs py-0.5 rounded-DEFAULT bg-surface-container-highest text-tertiary font-bold tracking-wider">
+              Stable
+            </span>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs text-on-surface-variant font-code-sm text-code-sm bg-surface-container-lowest/30 px-space-sm py-1 rounded-DEFAULT">
+<div class="flex items-center gap-space-md">
+<span>Runs: <strong class="text-on-surface font-semibold">14</strong></span>
+<span class="text-on-surface-variant">Ahead: +1</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant/40 tracking-widest uppercase">IDLE</span>
+</div>
+</div>
+<div class="repo-item cursor-pointer p-space-md rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all shadow-sm relative overflow-hidden group" data-repo-id="quantum-api" onclick="selectRepo('quantum-api')">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-tertiary/40"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">folder</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">stark-labs/quantum-tunneling-api</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant pl-6">
+<span class="material-symbols-outlined text-[14px]">fork_right</span>
+<span>dev-v3</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm uppercase px-space-xs py-0.5 rounded-DEFAULT bg-secondary-container text-on-secondary-container font-bold tracking-wider">
+              Pending Diagnostics
+            </span>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs text-on-surface-variant font-code-sm text-code-sm bg-surface-container-lowest/30 px-space-sm py-1 rounded-DEFAULT">
+<div class="flex items-center gap-space-md">
+<span>Runs: <strong class="text-on-surface font-semibold">8</strong></span>
+<span class="text-on-surface-variant">Ahead: 0</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">QUEUE POSITION: 2</span>
+</div>
+</div>
+<div class="repo-item cursor-pointer p-space-md rounded-DEFAULT bg-surface-container-low hover:bg-surface-container transition-all shadow-sm relative overflow-hidden group" data-repo-id="repulsor" onclick="selectRepo('repulsor')">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-tertiary/40"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">folder</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">stark-avionics/repulsor-stabilizer</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant pl-6">
+<span class="material-symbols-outlined text-[14px]">fork_right</span>
+<span>fix/gyro-drift</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm uppercase px-space-xs py-0.5 rounded-DEFAULT bg-tertiary-container text-on-tertiary font-bold tracking-wider">
+              Verified
+            </span>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs text-on-surface-variant font-code-sm text-code-sm bg-surface-container-lowest/30 px-space-sm py-1 rounded-DEFAULT">
+<div class="flex items-center gap-space-md">
+<span>Runs: <strong class="text-on-surface font-semibold">31</strong></span>
+<span class="text-secondary font-semibold">Ahead: +6</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant/40 tracking-widest uppercase">IDLE</span>
+</div>
+</div>
+</div>
+<div class="relative w-full rounded-DEFAULT overflow-hidden bg-surface-container-lowest p-space-md shadow-md mt-space-sm">
+<div class="flex items-center gap-space-sm mb-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">layers</span>
+<span class="font-label-md text-label-md uppercase text-on-surface tracking-widest">Hardware Architecture</span>
+</div>
+<div class="relative w-full h-36 rounded-DEFAULT overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="Futuristic cybernetic blueprints and holographic flight OS circuit schematic with metallic titanium surfaces, glowing cyan neon data nodes, and deep obsidian contrasts in aerospace engineering style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH7EE_g4xNW20SVwIG0Tn8wpkATIiaFX1WiAAZpb18b8WkhHHEH_7tF3eO1sK0oXsg8mTBG5C-XIEUBL-7jtTef0uDXd91c1dDSagIRoNmnppXgmPuP5BPGnvNZaRNDzqVRLz0XJlUOaAW4jMJbvMJbbiyvW84oKzWU9CYaaHN4oFu3SkZTyxMFJ4kQlQR8WXWHIkp1y7WWBnc5tDBKtlLWnudX7NQw5ZdQUCopxGqSQBU_v-Pw3ws"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/40 to-transparent"></div>
+<div class="absolute bottom-2 left-2 flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface">
+<span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+<span>ARM64 Neural Execution Node 01</span>
+</div>
+</div>
+</div>
+</div>
+<div class="xl:col-span-7 flex flex-col gap-space-md">
+<div class="w-full bg-surface-container-low rounded-DEFAULT p-space-lg shadow-xl relative overflow-hidden">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-md">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Selected Workspace</span>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="font-display-lg text-headline-lg text-on-surface font-bold tracking-tight" id="detail-repo-name">stark-core/mark-85-flight-os</span>
+</div>
+<div class="flex items-center gap-space-sm mt-space-xs font-code-sm text-code-sm text-on-surface-variant">
+<span class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[16px]">fork_right</span>
+<span id="detail-branch-name">feat/nanotech-mesh</span>
+</span>
+<span>::</span>
+<span class="bg-surface-container-highest px-space-xs py-0.5 rounded-DEFAULT text-on-surface" id="detail-head-commit">HEAD: c90a21f</span>
+<span>::</span>
+<span class="text-tertiary">4 commits ahead</span>
+<span>::</span>
+<span>7 files modified</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-primary-container text-on-primary-container rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider font-bold shadow-[0_0_12px_rgba(230,36,41,0.35)] hover:bg-primary-container/90 transition-all active:scale-95" onclick="triggerAction('VIEW_ALL_CHANGES')">
+<span class="material-symbols-outlined text-[18px]">difference</span>
+<span>View All Changes</span>
+</button>
+</div>
+</div>
+<div class="my-space-md p-space-md rounded-DEFAULT bg-surface-container-lowest shadow-inner">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px]">memory</span>
+              Isolated Environment Diagnostics
+            </span>
+<span class="font-label-sm text-label-sm text-tertiary uppercase bg-tertiary-container/30 px-space-xs py-0.5 rounded-DEFAULT">CONTAINER #851-A</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<div class="flex flex-col bg-surface-container px-space-sm py-1.5 rounded-DEFAULT">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Runtime Sandbox</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">Python 3.11 Docker</span>
+</div>
+<div class="flex flex-col bg-surface-container px-space-sm py-1.5 rounded-DEFAULT">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Regression Engine</span>
+<span class="font-code-sm text-code-sm text-tertiary font-semibold">Pytest 8.1.0</span>
+</div>
+<div class="flex flex-col bg-surface-container px-space-sm py-1.5 rounded-DEFAULT">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Daemon System</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">Node.js 20.x</span>
+</div>
+<div class="flex flex-col bg-surface-container px-space-sm py-1.5 rounded-DEFAULT">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">GPU Telemetry</span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">CUDA Hook Active</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-space-sm my-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface uppercase tracking-wider flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[16px]">history</span>
+              Autonomous Remediation Run History
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">TOTAL: 3 SESSIONS</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-sm rounded-DEFAULT bg-surface-container hover:bg-surface-container-high transition-all">
+<div class="flex items-center gap-space-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_rgba(91,214,238,0.8)]"></div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">RUN-08492</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">::</span>
+<span class="font-code-sm text-code-sm text-on-surface">Memory leak patch in avionics.py</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary">AST Verification: PASSED (+24 lines / -12 lines)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md mt-2 sm:mt-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">12m ago</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-surface-container-highest text-tertiary uppercase font-bold">VERIFIED</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-sm rounded-DEFAULT bg-surface-container hover:bg-surface-container-high transition-all">
+<div class="flex items-center gap-space-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_rgba(91,214,238,0.8)]"></div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">RUN-08410</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">::</span>
+<span class="font-code-sm text-code-sm text-on-surface">Thruster sync async deadlock</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary">Race condition rectified with Mutex Lock</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md mt-2 sm:mt-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">3h ago</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-surface-container-highest text-tertiary uppercase font-bold">VERIFIED</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-space-sm rounded-DEFAULT bg-surface-container hover:bg-surface-container-high transition-all">
+<div class="flex items-center gap-space-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(230,36,41,0.8)]"></div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">RUN-08399</span>
+<span class="text-on-surface-variant font-code-sm text-code-sm">::</span>
+<span class="font-code-sm text-code-sm text-on-surface">Thermal sensor calibration fault</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary">Pytest Exception: SensorTimeoutError</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md mt-2 sm:mt-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">1d ago</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-primary-container text-on-primary uppercase font-bold">FAILED</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs mt-space-md pt-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Repository Command Matrix</span>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" onclick="triggerAction('EXPORT_PATCH')">
+<span class="material-symbols-outlined text-[18px] text-tertiary">download</span>
+<span>Export Patch</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high text-secondary rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" id="btn-write-changes" onclick="confirmWriteChanges()">
+<span class="material-symbols-outlined text-[18px]">drive_file_move</span>
+<span id="write-changes-label">Write to Original</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" onclick="triggerAction('OPEN_PR')">
+<span class="material-symbols-outlined text-[18px] text-tertiary">commit</span>
+<span>Open Pull Request</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" onclick="triggerAction('REBUILD_ENV')">
+<span class="material-symbols-outlined text-[18px] text-secondary">restart_alt</span>
+<span>Rebuild Environment</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-highest hover:bg-surface-variant text-secondary rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" id="btn-reset-proj" onclick="confirmResetProject()">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span id="reset-proj-label">Reset Project</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-highest hover:bg-primary-container hover:text-on-primary-container text-primary rounded-DEFAULT font-label-md text-label-md uppercase tracking-wider transition-all shadow-sm" onclick="openDeleteModal()">
+<span class="material-symbols-outlined text-[18px]">delete_forever</span>
+<span>Delete Project</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 z-50 flex items-center justify-center p-space-md bg-surface-container-lowest/80 backdrop-blur-md hidden" id="delete-modal">
+<div class="relative w-full max-w-lg rounded-DEFAULT bg-surface-container-high p-space-lg shadow-2xl flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[24px]">crisis_alert</span>
+<span class="font-headline-sm text-headline-sm uppercase font-bold text-on-surface">Autonomous Purge Sequence</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="closeDeleteModal()">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="font-body-md text-body-md text-on-surface-variant flex flex-col gap-space-xs">
+<p>This action will completely purge the repository sandbox, AST indices, and repair artifacts from Stark Industries Flight Deck Diagnostics.</p>
+<p class="font-code-sm text-code-sm bg-surface-container-lowest p-space-sm rounded-DEFAULT text-on-surface">
+          Target: <strong class="text-primary" id="delete-target-name">stark-core/mark-85-flight-os</strong>
+</p>
+<p class="font-label-sm text-label-sm text-secondary uppercase mt-space-xs">
+          Type the exact repository identifier below to authorize override:
+        </p>
+</div>
+<div class="flex flex-col gap-space-xs">
+<input class="w-full bg-surface-container-lowest rounded-DEFAULT px-space-md py-space-sm font-code-sm text-code-sm text-on-surface placeholder:text-on-surface-variant/30 focus:outline-none focus:ring-1 focus:ring-primary" id="delete-confirm-input" oninput="checkDeleteMatch()" placeholder="stark-core/mark-85-flight-os" type="text"/>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-space-sm rounded-DEFAULT bg-surface-container text-on-surface font-label-md text-label-md uppercase tracking-wider" onclick="closeDeleteModal()">
+          Cancel
+        </button>
+<button class="opacity-40 cursor-not-allowed px-space-md py-space-sm rounded-DEFAULT bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider font-bold shadow transition-all" disabled="" id="btn-delete-confirm" onclick="executeProjectPurge()">
+          Authorize Purge
+        </button>
+</div>
+</div>
+</div>
+<div class="fixed bottom-6 right-6 z-50 flex items-center gap-space-sm px-space-md py-space-sm rounded-DEFAULT bg-surface-container-highest text-on-surface font-code-sm text-code-sm shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4" id="toast">
+<span class="material-symbols-outlined text-tertiary text-[18px]" id="toast-icon">info</span>
+<span id="toast-message">Telemetry updated</span>
+</div>
+</div>
+<script>
+  const repositories = {
+    'mark-85': {
+      name: 'stark-core/mark-85-flight-os',
+      branch: 'feat/nanotech-mesh',
+      head: 'HEAD: c90a21f',
+      ahead: 4,
+      files: 7,
+      status: 'Repaired'
+    },
+    'arc-reactor': {
+      name: 'stark-industries/arc-reactor-telemetry',
+      branch: 'main',
+      head: 'HEAD: 7b31ee0',
+      ahead: 1,
+      files: 2,
+      status: 'Stable'
+    },
+    'quantum-api': {
+      name: 'stark-labs/quantum-tunneling-api',
+      branch: 'dev-v3',
+      head: 'HEAD: 4ef910c',
+      ahead: 0,
+      files: 0,
+      status: 'Pending Diagnostics'
+    },
+    'repulsor': {
+      name: 'stark-avionics/repulsor-stabilizer',
+      branch: 'fix/gyro-drift',
+      head: 'HEAD: 89ab321',
+      ahead: 6,
+      files: 9,
+      status: 'Verified'
+    }
+  };
+
+  let activeRepoKey = 'mark-85';
+
+  function showToast(msg, icon = 'info') {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-message');
+    const toastIcon = document.getElementById('toast-icon');
+    
+    toastMsg.innerText = msg;
+    toastIcon.innerText = icon;
+    toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+    toast.classList.add('opacity-100', 'translate-y-0');
+
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+      toast.classList.remove('opacity-100', 'translate-y-0');
+    }, 3200);
+  }
+
+  function selectRepo(key) {
+    activeRepoKey = key;
+    const r = repositories[key];
+    if (!r) return;
+
+    document.querySelectorAll('.repo-item').forEach(el => {
+      el.classList.remove('bg-surface-container-high', 'shadow-md');
+      el.classList.add('bg-surface-container-low', 'shadow-sm');
+      const rail = el.querySelector('div:first-child');
+      if (rail) {
+        rail.classList.remove('bg-tertiary', 'shadow-[0_0_8px_rgba(91,214,238,0.8)]');
+        rail.classList.add('bg-transparent');
+      }
+    });
+
+    const activeEl = document.querySelector(`.repo-item[data-repo-id="${key}"]`);
+    if (activeEl) {
+      activeEl.classList.remove('bg-surface-container-low', 'shadow-sm');
+      activeEl.classList.add('bg-surface-container-high', 'shadow-md');
+      const rail = activeEl.querySelector('div:first-child');
+      if (rail) {
+        rail.classList.add('bg-tertiary', 'shadow-[0_0_8px_rgba(91,214,238,0.8)]');
+        rail.classList.remove('bg-transparent');
+      }
+    }
+
+    document.getElementById('detail-repo-name').innerText = r.name;
+    document.getElementById('detail-branch-name').innerText = r.branch;
+    document.getElementById('detail-head-commit').innerText = r.head;
+    document.getElementById('delete-target-name').innerText = r.name;
+    document.getElementById('delete-confirm-input').placeholder = r.name;
+
+    showToast(`Switched active context to ${r.name}`, 'sync');
+  }
+
+  function triggerAction(action) {
+    if (action === 'VIEW_ALL_CHANGES') {
+      showToast('Launching unified diff matrix...', 'difference');
+    } else if (action === 'EXPORT_PATCH') {
+      showToast('Generating git-format-patch-c90a21f.bundle...', 'download');
+    } else if (action === 'OPEN_PR') {
+      showToast('Pull request initiated on branch: ' + repositories[activeRepoKey].branch, 'commit');
+    } else if (action === 'REBUILD_ENV') {
+      showToast('Purging container layers and recompiling Python 3.11 environment...', 'restart_alt');
+    }
+  }
+
+  let writeChangesStep = false;
+  function confirmWriteChanges() {
+    const label = document.getElementById('write-changes-label');
+    const btn = document.getElementById('btn-write-changes');
+    if (!writeChangesStep) {
+      writeChangesStep = true;
+      label.innerText = 'Confirm Local Sync?';
+      btn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+      showToast('Safety check: Click again to write changes into source tree', 'warning');
+      setTimeout(() => {
+        writeChangesStep = false;
+        label.innerText = 'Write to Original';
+        btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+      }, 4000);
+    } else {
+      writeChangesStep = false;
+      label.innerText = 'Write to Original';
+      btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+      showToast('Source files synchronized with local workspace.', 'check_circle');
+    }
+  }
+
+  let resetProjStep = false;
+  function confirmResetProject() {
+    const label = document.getElementById('reset-proj-label');
+    const btn = document.getElementById('btn-reset-proj');
+    if (!resetProjStep) {
+      resetProjStep = true;
+      label.innerText = 'Confirm Clean Reset?';
+      btn.classList.add('bg-primary-container', 'text-on-primary-container');
+      showToast('Warning: Click again to revert uncommitted modifications', 'report');
+      setTimeout(() => {
+        resetProjStep = false;
+        label.innerText = 'Reset Project';
+        btn.classList.remove('bg-primary-container', 'text-on-primary-container');
+      }, 4000);
+    } else {
+      resetProjStep = false;
+      label.innerText = 'Reset Project';
+      btn.classList.remove('bg-primary-container', 'text-on-primary-container');
+      showToast('Working tree hard-reset to commit HEAD.', 'restore');
+    }
+  }
+
+  function openDeleteModal() {
+    document.getElementById('delete-modal').classList.remove('hidden');
+    document.getElementById('delete-confirm-input').value = '';
+    checkDeleteMatch();
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+  }
+
+  function checkDeleteMatch() {
+    const val = document.getElementById('delete-confirm-input').value.trim();
+    const target = repositories[activeRepoKey].name;
+    const btn = document.getElementById('btn-delete-confirm');
+    if (val === target) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-40', 'cursor-not-allowed');
+      btn.classList.add('cursor-pointer');
+    } else {
+      btn.disabled = true;
+      btn.classList.add('opacity-40', 'cursor-not-allowed');
+      btn.classList.remove('cursor-pointer');
+    }
+  }
+
+  function executeProjectPurge() {
+    const rName = repositories[activeRepoKey].name;
+    closeDeleteModal();
+    showToast(`Project ${rName} purged from diagnostic cache.`, 'delete');
+  }
+
+  document.getElementById('repo-search-input').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.repo-item').forEach(item => {
+      const text = item.innerText.toLowerCase();
+      item.style.display = text.includes(q) ? 'block' : 'none';
+    });
+  });
+</script></div></main></div></body></html>

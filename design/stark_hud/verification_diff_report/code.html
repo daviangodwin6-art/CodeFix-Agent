@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#343942","surface-container-lowest":"#090e16","on-primary-fixed-variant":"#93000e","on-secondary-container":"#392600","surface-container":"#1b2028","surface":"#0f141c","error-container":"#93000a","on-secondary-fixed":"#271900","inverse-primary":"#c00016","on-surface":"#dee2ee","on-background":"#dee2ee","on-error":"#690005","on-tertiary-fixed":"#001f25","tertiary-fixed":"#a4eeff","tertiary-fixed-dim":"#5bd6ee","outline":"#ad8884","error":"#ffb4ab","on-primary-container":"#ffffff","on-secondary-fixed-variant":"#5e4200","on-primary-fixed":"#410003","tertiary-container":"#008294","secondary":"#f9bc45","primary-fixed":"#ffdad6","outline-variant":"#5d3f3c","primary-fixed-dim":"#ffb4ac","surface-variant":"#30353e","primary-container":"#e62429","surface-container-highest":"#30353e","surface-container-high":"#252a33","secondary-fixed":"#ffdea8","on-primary":"#690007","tertiary":"#5bd6ee","inverse-surface":"#dee2ee","on-tertiary-container":"#ffffff","primary":"#ffb4ac","background":"#0f141c","on-tertiary":"#00363f","secondary-container":"#bc8708","on-tertiary-fixed-variant":"#004e5a","surface-tint":"#ffb4ac","surface-dim":"#0f141c","on-secondary":"#422d00","surface-container-low":"#171c24","inverse-on-surface":"#2c3139","on-surface-variant":"#e7bdb8","on-error-container":"#ffdad6","secondary-fixed-dim":"#f9bc45"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-sm":"0.5rem","space-xl":"2.5rem","space-md":"1rem","margin-mobile":"1rem","gutter":"1.5rem","space-xs":"0.25rem","gutter-mobile":"0.75rem","margin":"2rem","space-lg":"1.5rem"},fontFamily:{"code-sm":["JetBrains Mono"],"body-lg":["Inter"],"label-md":["JetBrains Mono"],"code-lg":["JetBrains Mono"],"label-sm":["JetBrains Mono"],"headline-lg-mobile":["Space Grotesk"],"headline-lg":["Space Grotesk"],"headline-md":["Space Grotesk"],"body-md":["Inter"],"display-lg-mobile":["Space Grotesk"],"body-sm":["Inter"],"headline-sm":["Space Grotesk"],"display-lg":["Space Grotesk"]},fontSize:{"code-sm":["12px",{"lineHeight":"18px","letterSpacing":"0","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"16px","letterSpacing":"0.08em","fontWeight":"600"}],"code-lg":["14px",{"lineHeight":"22px","letterSpacing":"-0.01em","fontWeight":"500"}],"label-sm":["9px",{"lineHeight":"12px","letterSpacing":"0.12em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["24px",{"lineHeight":"32px","letterSpacing":"0","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"display-lg-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0.01em","fontWeight":"600"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}};</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.6)]"><div class="h-14 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><img alt="Stark Arc Reactor Emblem" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XM-DsF3d18SZOCextYpMzIatKO7an6AH34xKl1gRAjc_uS0UdOkBGo9KwkAAwwfYd5iu7kGRKKUSVy2bHpSuYLolEl3BoqAjn_u54b6g15V9vdPdnnAllflUdLTOfoYAeh2mGU_oNdHubuqd700ADnNugiQn1X1yROlp0EWSe-WuZ8-R_onte4IiJdyR69kDHsr3SJUWI5uurAiK9shVWF53mx2QN68RfR6Wvfx2xKahJH2yklHntYywE"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm tracking-wide text-on-surface">CODEFIX AGENT</span><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-DEFAULT bg-primary-container text-on-primary-container uppercase font-semibold">HUD v4.2</span></div><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Stark Industries Flight Deck Diagnostics</span></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container-high"><span class="material-symbols-outlined text-secondary text-[14px]">deployed_code</span><span class="font-code-sm text-code-sm text-on-surface">stark-core/mark-85-flight-os</span><span class="font-label-sm text-label-sm text-on-surface-variant">::</span><span class="font-code-sm text-code-sm text-secondary">branch: main</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-label-md text-label-md text-tertiary uppercase">API Online // 42ms</span></div><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-DEFAULT bg-surface-container-low"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Motion</span><button class="w-8 h-4 rounded-full bg-primary-container p-0.5 flex items-center justify-end transition-all" type="button"><span class="w-3 h-3 rounded-full bg-on-primary-container shadow"></span></button></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden sm:flex flex-col text-right"><span class="font-label-md text-label-md text-on-surface">T. STARK // ENG-01</span><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase">AUTH::STARK_SEC_CLEARANCE_A1</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><aside class="fixed left-0 top-14 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md shadow-[1px_0_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col gap-space-sm"><div class="px-space-md py-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Mission Command</span><span class="font-code-sm text-code-sm text-secondary">0x85A</span></div><nav class="flex flex-col gap-1 px-space-sm" data-active-classes="bg-primary-container text-on-primary-container font-semibold shadow-[0_0_12px_rgba(230,36,41,0.35)]"><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="system-overview" href="#"><span class="material-symbols-outlined text-[20px]">memory</span><span class="font-label-md text-label-md uppercase tracking-wider">System Access</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="engineering-console" href="#"><span class="material-symbols-outlined text-[20px]">terminal</span><span class="font-label-md text-label-md uppercase tracking-wider">Engineering Console</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="project-intelligence" href="#"><span class="material-symbols-outlined text-[20px]">account_tree</span><span class="font-label-md text-label-md uppercase tracking-wider">Project Intelligence</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="live-execution-hud" href="#"><span class="material-symbols-outlined text-[20px]">radar</span><span class="font-label-md text-label-md uppercase tracking-wider">Live Execution HUD</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="verification-and-diff" href="#"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="font-label-md text-label-md uppercase tracking-wider">Verification &amp; Diff</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="settings-and-telemetry" href="#"><span class="material-symbols-outlined text-[20px]">tune</span><span class="font-label-md text-label-md uppercase tracking-wider">Settings &amp; Telemetry</span></a></nav></div><div class="px-space-md flex flex-col gap-space-xs"><div class="p-space-sm rounded-DEFAULT bg-surface-container-low"><div class="flex items-center justify-between mb-1"><span class="font-label-sm text-label-sm text-secondary uppercase">Reactor Core Output</span><span class="font-code-sm text-code-sm text-secondary">98.4%</span></div><div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden"><div class="h-full w-[98%] bg-secondary shadow-[0_0_8px_rgba(249,188,69,0.8)]"></div></div></div><div class="text-center"><span class="font-label-sm text-label-sm text-on-surface-variant opacity-60">AUTONOMOUS REMEDIATION PROTOCOL</span></div></div></aside><aside class="fixed right-0 top-14 bottom-0 w-80 bg-surface-container-lowest z-40 hidden 2xl:flex flex-col justify-between py-space-md px-space-md shadow-[-1px_0_12px_rgba(0,0,0,0.5)]"><div class="flex flex-col gap-space-md"><div class="flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-primary text-[18px]">archive</span><span class="font-label-md text-label-md text-on-surface uppercase tracking-wider">Engineering Archive</span></div><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded-DEFAULT bg-surface-container-high text-tertiary uppercase">LOCKED</span></div><div class="p-space-sm rounded-DEFAULT bg-surface-container-low flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase">Active Target Workspace</span><div class="flex items-center justify-between font-code-sm text-code-sm text-on-surface"><span class="font-semibold">mark-85-flight-os</span><span class="text-secondary">v4.2.19</span></div><div class="flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm"><span>Branch: release/stabilize-hud</span><span class="material-symbols-outlined text-[14px]">swap_horiz</span></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Runtime Environment Diagnostics</span><div class="flex flex-col gap-1"><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Docker Container</span><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold">HEALTHY</span></div><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Compiler Runtime</span><span class="font-code-sm text-code-sm text-secondary">Python 3.11</span></div><div class="flex items-center justify-between px-space-sm py-1.5 rounded-DEFAULT bg-surface-container-high"><span class="font-code-sm text-code-sm text-on-surface">Regression Suite</span><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold">PYTEST LOCKED</span></div></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Remediation Telemetry</span><div class="grid grid-cols-3 gap-space-xs"><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-on-surface">14</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Runs</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-secondary">12</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Fixed</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container text-center"><div class="font-headline-sm text-headline-sm text-tertiary">100%</div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Pass</div></div></div></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Telemetry Feed</span><div class="flex flex-col gap-1"><div class="p-space-xs rounded-DEFAULT bg-surface-container font-code-sm text-code-sm"><div class="text-tertiary">[PATCH::COMMITTED]</div><div class="text-on-surface-variant">thruster_vector_sync.py</div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container font-code-sm text-code-sm"><div class="text-secondary">[AST::PARSED]</div><div class="text-on-surface-variant">avionics_matrix.cpp:482</div></div></div></div></div><div class="p-space-xs rounded-DEFAULT bg-surface-container-high text-center"><span class="font-label-sm text-label-sm text-tertiary uppercase font-semibold tracking-widest">Telemetry Linked // Satellite Uplink</span></div></aside><div class="pl-64 2xl:pr-80"><main class="relative pt-14 min-h-screen bg-background w-full px-space-md"><div class="relative w-full py-space-md"><div class="absolute top-2 left-2 font-code-sm text-code-sm text-tertiary opacity-40 select-none">[LAT 34.0049° N, LONG 118.8076° W]</div><div class="absolute top-2 right-2 font-code-sm text-code-sm text-secondary opacity-40 select-none">SEC::MARK-85-CALIBRATED</div><div class="flex flex-col w-full gap-space-lg pb-space-xl">
+<!-- TOP VERIFICATION HUD BANNER -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl p-space-lg flex flex-col gap-space-md">
+<div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-tertiary-container/10 blur-3xl pointer-events-none"></div>
+<div class="absolute left-1/3 -bottom-20 w-64 h-64 rounded-full bg-secondary/5 blur-2xl pointer-events-none"></div>
+<!-- Status Header Line -->
+<div class="flex flex-wrap items-center justify-between gap-space-md z-10">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-tertiary-container/20 shadow-md">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-label-md text-label-md text-tertiary tracking-widest uppercase">VERIFICATION PROTOCOL: 100% SUCCESSFUL [ARC GREEN]</span>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high">
+<span class="material-symbols-outlined text-secondary text-[16px]">verified</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold">STARK-SHA-9921 VERIFIED</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-code-sm text-code-sm text-on-surface-variant font-medium">TARGET RUNTIME:</span>
+<span class="font-label-md text-label-md px-space-sm py-0.5 rounded bg-surface-container-highest text-tertiary-fixed-dim">FLIGHT_CORE::MK85_v4.2.19</span>
+</div>
+</div>
+<!-- Main Banner Title & Autonomous Assurance Note -->
+<div class="flex flex-col gap-space-xs z-10">
+<div class="flex items-baseline gap-space-sm">
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">REPAIR VERIFIED BY STARK AUTOMATED HARNESS</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+<span class="font-code-lg text-code-lg text-tertiary tracking-wide uppercase">ZERO REGRESSIONS DETECTED // AST VALIDATION PASSED // RUNTIME HARNESS STABLE</span>
+</div>
+</div>
+<!-- Telemetry Metric Pill Badges -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-space-sm pt-space-xs z-10">
+<div class="bg-surface-container-high/70 backdrop-blur-md rounded-lg p-space-sm flex flex-col gap-0.5 shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">HARNESS DURATION</span>
+<span class="font-code-lg text-code-lg text-on-surface font-semibold">00:04:18.42</span>
+<span class="font-label-sm text-label-sm text-tertiary">Realtime Clock</span>
+</div>
+<div class="bg-surface-container-high/70 backdrop-blur-md rounded-lg p-space-sm flex flex-col gap-0.5 shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">REGRESSION SUITE</span>
+<div class="flex items-center gap-1">
+<span class="font-code-lg text-code-lg text-tertiary font-bold">52/52</span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold uppercase">PASS</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant opacity-80">48 base + 4 synths</span>
+</div>
+<div class="bg-surface-container-high/70 backdrop-blur-md rounded-lg p-space-sm flex flex-col gap-0.5 shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">MUTATION DELTA</span>
+<div class="flex items-center gap-1.5 font-code-lg text-code-lg font-semibold">
+<span class="text-tertiary">+30</span>
+<span class="text-on-surface-variant">/</span>
+<span class="text-primary">-8</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant opacity-80">2 files altered</span>
+</div>
+<div class="bg-surface-container-high/70 backdrop-blur-md rounded-lg p-space-sm flex flex-col gap-0.5 shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">AUTONOMOUS AGENT</span>
+<span class="font-code-lg text-code-lg text-secondary font-semibold">MARK-85 HUD AGENT</span>
+<span class="font-label-sm text-label-sm text-secondary-fixed font-medium">Model: Stark-LLM-v9</span>
+</div>
+<div class="col-span-2 md:col-span-1 bg-surface-container-high/70 backdrop-blur-md rounded-lg p-space-sm flex flex-col gap-0.5 shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">COMMIT DIGEST</span>
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface truncate">7f4c9b19e2</span>
+<button class="px-1.5 py-0.5 rounded bg-surface-container text-tertiary hover:bg-tertiary hover:text-on-tertiary transition-all" id="copyHashBtn" onclick="navigator.clipboard.writeText('7f4c9b19e289bf00a12e34d98342ca'); const t=document.getElementById('copyHint'); t.textContent='COPIED!'; setTimeout(()=&gt;t.textContent='COPY', 1500);">
+<span class="font-label-sm text-label-sm uppercase" id="copyHint">COPY</span>
+</button>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-fixed-dim">sha256:verified</span>
+</div>
+</div>
+</div>
+<!-- MIDDLE SECTION: FILE TREE + INTERACTIVE CODE INSPECTION VIEW -->
+<div class="flex flex-col gap-space-sm">
+<!-- Section Bar Header -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm px-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="p-1 rounded bg-surface-container-high text-tertiary">
+<span class="material-symbols-outlined text-[20px]">difference</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-normal">CUMULATIVE REPAIR DIFF // avionics.py &amp; test_telemetry.py</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Direct syntactic patch payload generated via zero-shot AST reconstruction</span>
+</div>
+</div>
+<!-- Controls & Toggle -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center bg-surface-container-lowest p-0.5 rounded-lg">
+<button class="px-space-sm py-1 rounded font-label-md text-label-md text-on-surface bg-surface-container-high uppercase transition-all" id="btnUnified" onclick="setDiffMode('unified')">Unified</button>
+<button class="px-space-sm py-1 rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase transition-all" id="btnSplit" onclick="setDiffMode('split')">Split Canvas</button>
+</div>
+<div class="hidden sm:flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-[14px]">code_blocks</span>
+<span>WHITESPACE: STRICT</span>
+</div>
+</div>
+</div>
+<!-- Main Workspace Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- File Navigation Sidebar (3 cols) -->
+<div class="lg:col-span-3 flex flex-col gap-space-sm">
+<div class="bg-surface-container rounded-lg p-space-md shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">MODIFIED ARTIFACTS</span>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary">2 Files</span>
+</div>
+<!-- File list buttons -->
+<div class="flex flex-col gap-space-xs">
+<!-- File 1: avionics.py -->
+<button class="w-full text-left p-space-sm rounded-lg bg-surface-container-high transition-all flex flex-col gap-1 shadow-sm" id="fileItem1" onclick="selectFile(1)">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary text-[16px]">integration_instructions</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">avionics.py</span>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-tertiary/10 text-tertiary font-bold">+18 / -8</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>src/flight_deck/</span>
+<span class="text-tertiary">2 chunks</span>
+</div>
+</button>
+<!-- File 2: test_telemetry.py -->
+<button class="w-full text-left p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high/60 transition-all flex flex-col gap-1" id="fileItem2" onclick="selectFile(2)">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">assignment_turned_in</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">test_telemetry.py</span>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.2 rounded bg-tertiary/10 text-tertiary font-bold">+12 / -0</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>tests/regression/</span>
+<span class="text-secondary">1 chunk (New)</span>
+</div>
+</button>
+</div>
+<!-- Patch Statistics Widget -->
+<div class="mt-space-sm p-space-sm rounded bg-surface-container-lowest flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-tertiary uppercase">Patch Confidence Analysis</span>
+<div class="flex items-center justify-between font-code-sm text-code-sm">
+<span class="text-on-surface-variant">Syntactic Safety</span>
+<span class="text-tertiary font-semibold">99.8%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full w-[99.8%] bg-tertiary shadow-[0_0_8px_rgba(91,214,238,0.7)]"></div>
+</div>
+<div class="flex items-center justify-between font-code-sm text-code-sm pt-1">
+<span class="text-on-surface-variant">Side-Effect Surface</span>
+<span class="text-secondary font-semibold">Isolated (0.02)</span>
+</div>
+<div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full w-[12%] bg-secondary"></div>
+</div>
+</div>
+</div>
+<!-- System Architecture Reference Snapshot -->
+<div class="bg-surface-container rounded-lg p-space-md shadow-md flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Target Subsystems</span>
+<div class="flex flex-col gap-1 font-code-sm text-code-sm pt-1">
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low">
+<span class="text-on-surface">Mark-85 Thruster Sync</span>
+<span class="text-tertiary font-semibold">ONLINE</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low">
+<span class="text-on-surface">Plasma Shunt Bypass</span>
+<span class="text-tertiary font-semibold">NORMAL</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-low">
+<span class="text-on-surface">Repulsor Matrix VRef</span>
+<span class="text-tertiary font-semibold">LOCKED</span>
+</div>
+</div>
+</div>
+</div>
+<!-- High-Contrast Diff Viewer (9 cols) -->
+<div class="lg:col-span-9 flex flex-col gap-space-sm">
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl overflow-hidden flex flex-col">
+<!-- Diff Top Bar -->
+<div class="bg-surface-container-high px-space-md py-space-xs flex items-center justify-between flex-wrap gap-2">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">terminal</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold" id="diffFilePath">src/flight_deck/avionics.py</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-tertiary">STARK_AUTONOMOUS_DIFF</span>
+</div>
+<div class="flex items-center gap-space-md font-code-sm text-code-sm">
+<span class="text-tertiary font-medium">Hunk: @@ -142,8 +142,18 @@</span>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-tertiary transition-colors" onclick="navigator.clipboard.writeText(document.getElementById('codePayload').innerText); alert('Raw hunk copied to clipboard');">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span class="font-label-sm text-label-sm">HUNK</span>
+</button>
+</div>
+</div>
+<!-- Code Diff Body with JetBrains Mono Styling -->
+<div class="font-code-sm text-code-sm overflow-x-auto p-space-sm flex flex-col leading-relaxed" id="codePayload">
+<!-- Context Line -->
+<div class="flex items-center group py-0.5 px-space-xs hover:bg-surface-container-high/40">
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">140</span>
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">140</span>
+<span class="w-6 text-center select-none text-on-surface-variant/30"> </span>
+<span class="text-on-surface-variant whitespace-pre">def calculate_thrust_vector_damping(plasma_pressure: float, core_flux: float) -&gt; float:</span>
+</div>
+<!-- Context Line -->
+<div class="flex items-center group py-0.5 px-space-xs hover:bg-surface-container-high/40">
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">141</span>
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">141</span>
+<span class="w-6 text-center select-none text-on-surface-variant/30"> </span>
+<span class="text-on-surface-variant whitespace-pre">    """Compute real-time dampening factor for Mk-85 atmospheric stabilizer arc."""</span>
+</div>
+<!-- Red Deletion Line 1 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-error-container/20">
+<span class="w-10 text-right pr-3 select-none text-error/60">142</span>
+<span class="w-10 text-right pr-3 select-none text-transparent">-</span>
+<span class="w-6 text-center select-none text-error font-bold">-</span>
+<span class="text-error line-through decoration-error/50 whitespace-pre">    if plasma_pressure &gt; 940.0:</span>
+</div>
+<!-- Red Deletion Line 2 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-error-container/20">
+<span class="w-10 text-right pr-3 select-none text-error/60">143</span>
+<span class="w-10 text-right pr-3 select-none text-transparent">-</span>
+<span class="w-6 text-center select-none text-error font-bold">-</span>
+<span class="text-error line-through decoration-error/50 whitespace-pre">        # DEPRECATED: Unchecked recursion during thermal micro-surges</span>
+</div>
+<!-- Red Deletion Line 3 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-error-container/20">
+<span class="w-10 text-right pr-3 select-none text-error/60">144</span>
+<span class="w-10 text-right pr-3 select-none text-transparent">-</span>
+<span class="w-6 text-center select-none text-error font-bold">-</span>
+<span class="text-error line-through decoration-error/50 whitespace-pre">        return plasma_pressure * 0.128 + core_flux</span>
+</div>
+<!-- Green Addition Line 1 (Glow) -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">142</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">    # STARK REMEDIATION: Guard against runaway cavitation loop with soft saturation envelope</span>
+</div>
+<!-- Green Addition Line 2 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">143</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">    normalized_flux = min(max(core_flux, 0.0), 1200.0)</span>
+</div>
+<!-- Green Addition Line 3 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">144</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">    if plasma_pressure &gt; 940.0:</span>
+</div>
+<!-- Green Addition Line 4 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">145</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">        dampener_envelope = math.tanh((plasma_pressure - 940.0) / 150.0)</span>
+</div>
+<!-- Green Addition Line 5 -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">146</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">        return (plasma_pressure * 0.128 * (1.0 - dampener_envelope * 0.4)) + (normalized_flux * 0.88)</span>
+</div>
+<!-- Context Line -->
+<div class="flex items-center group py-0.5 px-space-xs hover:bg-surface-container-high/40">
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">145</span>
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">147</span>
+<span class="w-6 text-center select-none text-on-surface-variant/30"> </span>
+<span class="text-on-surface-variant whitespace-pre">    return (plasma_pressure * 0.092) + normalized_flux</span>
+</div>
+<!-- Second Chunk Separator -->
+<div class="flex items-center py-1 px-space-xs bg-surface-container my-1 font-label-sm text-label-sm text-secondary">
+<span class="w-full text-center tracking-widest uppercase">@@ -211,5 +213,10 @@ // CHUNK 2: FLIGHT STABILIZER TELEMETRY BROADCAST HOOK</span>
+</div>
+<!-- Chunk 2 Context Line -->
+<div class="flex items-center group py-0.5 px-space-xs hover:bg-surface-container-high/40">
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">211</span>
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">213</span>
+<span class="w-6 text-center select-none text-on-surface-variant/30"> </span>
+<span class="text-on-surface-variant whitespace-pre">async def broadcast_avionics_vector(state: FlightState) -&gt; None:</span>
+</div>
+<!-- Chunk 2 Addition -->
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">214</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">    if state.is_plasma_divergence_critical():</span>
+</div>
+<div class="flex items-center group py-0.5 px-space-xs bg-tertiary-container/20 shadow-[inset_2px_0_0_0_#5bd6ee]">
+<span class="w-10 text-right pr-3 select-none text-transparent">+</span>
+<span class="w-10 text-right pr-3 select-none text-tertiary/70 font-semibold">215</span>
+<span class="w-6 text-center select-none text-tertiary font-bold">+</span>
+<span class="text-tertiary font-medium whitespace-pre">        await telemetry_bus.emit_emergency_recalibration(state.repulsor_bank_id)</span>
+</div>
+<!-- Chunk 2 Context Line -->
+<div class="flex items-center group py-0.5 px-space-xs hover:bg-surface-container-high/40">
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">212</span>
+<span class="w-10 text-right pr-3 select-none text-on-surface-variant/40">216</span>
+<span class="w-6 text-center select-none text-on-surface-variant/30"> </span>
+<span class="text-on-surface-variant whitespace-pre">    await telemetry_bus.publish("avionics.damping.sync", state.to_payload())</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- VERIFICATION EVIDENCE & AUDIT METRICS BOX -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- Pytest Terminal Execution Window (7 cols) -->
+<div class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-space-md shadow-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">bug_report</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Pytest Automated Verification Run</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-0.5 rounded bg-tertiary/10 text-tertiary font-code-sm text-code-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span>EXIT CODE 0</span>
+</div>
+</div>
+<!-- Raw pytest shell window -->
+<div class="p-space-sm rounded-lg bg-surface font-code-sm text-code-sm text-on-surface flex flex-col gap-1 leading-snug">
+<div class="text-on-surface-variant">root@stark-hud-worker-node-85:/workspace# pytest -v -s --durations=0 tests/</div>
+<div class="text-on-surface-variant opacity-70">platform linux -- Python 3.11.8, pytest-7.4.4, pluggy-1.4.0 -- /opt/stark-env/bin/python3</div>
+<div class="text-on-surface-variant opacity-70">cachedir: .pytest_cache | rootdir: /workspace | configfile: pyproject.toml</div>
+<div class="text-on-surface-variant opacity-70">plugins: cov-4.1.0, async-pytest-0.23.5</div>
+<div class="pt-1 text-on-surface-variant">collected 52 items</div>
+<div class="flex items-center justify-between pt-1">
+<span class="text-on-surface">tests/unit/test_propulsion_core.py::test_flux_ratio_nominal</span>
+<span class="text-tertiary font-bold">PASSED [  2%]</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">tests/unit/test_propulsion_core.py::test_emergency_diverter_lock</span>
+<span class="text-tertiary font-bold">PASSED [  4%]</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">tests/flight_deck/test_avionics.py::test_vector_damping_curve</span>
+<span class="text-tertiary font-bold">PASSED [ 50%]</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">tests/flight_deck/test_avionics.py::test_high_pressure_cavitation_guard</span>
+<span class="text-tertiary font-bold">PASSED [ 75%]</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface">tests/regression/test_telemetry.py::test_stark_remediation_synthesized</span>
+<span class="text-tertiary font-bold">PASSED [100%]</span>
+</div>
+<div class="mt-space-xs p-space-xs rounded bg-surface-container text-center">
+<span class="font-code-lg text-code-lg text-tertiary font-bold tracking-wide">==== 52 passed, 0 failed, 0 warnings in 2.14s ====</span>
+</div>
+</div>
+</div>
+<!-- Architectural Integrity & Import Graph Audit (5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-sm">
+<div class="bg-surface-container rounded-xl p-space-md shadow-lg flex flex-col gap-space-md h-full justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">Import &amp; Safety Audit</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-secondary uppercase font-semibold">Clean AST</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_box</span>
+<span class="font-code-sm text-code-sm text-on-surface font-semibold">18 Internal Stark Modules Resolved</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              All 18 internal Stark modules resolved cleanly without circular dependencies. Python AST node structure validated across 1,490 symbols.
+            </p>
+</div>
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="p-space-sm rounded bg-surface-container-high flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Memory Footprint</span>
+<span class="font-code-lg text-code-lg text-on-surface font-semibold">14.2 MB</span>
+<span class="font-label-sm text-label-sm text-tertiary">Within nominal (&lt;32MB)</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-high flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Cyclomatic Complexity</span>
+<span class="font-code-lg text-code-lg text-secondary font-semibold">M = 4</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Reduced from M=9</span>
+</div>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">security</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">STARK FLIGHT PROTOCOL LEVEL 5</span>
+<span class="font-code-sm text-code-sm text-tertiary-fixed-dim">Signed by T. Stark cryptographic key</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary text-[20px]">lock</span>
+</div>
+</div>
+</div>
+</div>
+<!-- STARK ACTION COMMAND BAR -->
+<div class="sticky bottom-4 z-30 p-space-md rounded-xl bg-surface-container-high/95 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-space-md">
+<!-- Upstream navigation & Return -->
+<div class="flex items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface transition-all shadow-sm" onclick="window.history.back()">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Return to Console</span>
+</button>
+<button class="hidden sm:flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface transition-all shadow-sm" onclick="alert('Upstream sync initiated with origin/main. Fetch complete.');">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Sync With Upstream</span>
+</button>
+</div>
+<!-- Primary Payload Actions -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Export Patch Button in Stark Gold -->
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-secondary-container/20 text-secondary hover:bg-secondary-container hover:text-on-secondary-container transition-all shadow-sm" onclick="downloadPatch();">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="font-label-md text-label-md uppercase tracking-wider font-semibold">EXPORT PATCH (.DIFF)</span>
+</button>
+<!-- Apply to Workspace (With Safety Confirmation Badge) -->
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container text-tertiary hover:bg-tertiary hover:text-on-tertiary transition-all shadow-sm" onclick="triggerApplyPatch();">
+<span class="material-symbols-outlined text-[18px]">inventory</span>
+<div class="flex flex-col text-left">
+<span class="font-label-md text-label-md uppercase tracking-wider font-semibold leading-tight">Apply to Workspace</span>
+<span class="font-label-sm text-label-sm opacity-80 leading-tight">CONFIRMATION ACTIVE</span>
+</div>
+</button>
+<!-- Create PR (Primary Action) -->
+<button class="flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary-container hover:brightness-110 active:scale-95 transition-all shadow-lg" onclick="triggerCreatePR();">
+<span class="material-symbols-outlined text-[18px]">call_merge</span>
+<div class="flex flex-col text-left">
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold">CREATE GITHUB PULL REQUEST</span>
+<span class="font-code-sm text-code-sm opacity-90">main &lt;- fix/plasma-stabilizer-leak</span>
+</div>
+</button>
+</div>
+</div>
+</div>
+<script>
+  function selectFile(id) {
+    const f1 = document.getElementById('fileItem1');
+    const f2 = document.getElementById('fileItem2');
+    const path = document.getElementById('diffFilePath');
+    
+    if (id === 1) {
+      f1.className = 'w-full text-left p-space-sm rounded-lg bg-surface-container-high transition-all flex flex-col gap-1 shadow-sm';
+      f2.className = 'w-full text-left p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high/60 transition-all flex flex-col gap-1';
+      path.textContent = 'src/flight_deck/avionics.py';
+    } else {
+      f2.className = 'w-full text-left p-space-sm rounded-lg bg-surface-container-high transition-all flex flex-col gap-1 shadow-sm';
+      f1.className = 'w-full text-left p-space-sm rounded-lg bg-surface-container-lowest hover:bg-surface-container-high/60 transition-all flex flex-col gap-1';
+      path.textContent = 'tests/regression/test_telemetry.py';
+    }
+  }
+
+  function setDiffMode(mode) {
+    const btnU = document.getElementById('btnUnified');
+    const btnS = document.getElementById('btnSplit');
+    if (mode === 'unified') {
+      btnU.className = 'px-space-sm py-1 rounded font-label-md text-label-md text-on-surface bg-surface-container-high uppercase transition-all';
+      btnS.className = 'px-space-sm py-1 rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase transition-all';
+    } else {
+      btnS.className = 'px-space-sm py-1 rounded font-label-md text-label-md text-on-surface bg-surface-container-high uppercase transition-all';
+      btnU.className = 'px-space-sm py-1 rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface uppercase transition-all';
+    }
+  }
+
+  function downloadPatch() {
+    const dummyPatch = `--- a/src/flight_deck/avionics.py\n+++ b/src/flight_deck/avionics.py\n@@ -142,3 +142,5 @@\n-    if plasma_pressure > 940.0:\n-        return plasma_pressure * 0.128 + core_flux\n+    normalized_flux = min(max(core_flux, 0.0), 1200.0)\n+    if plasma_pressure > 940.0:\n+        dampener_envelope = math.tanh((plasma_pressure - 940.0) / 150.0)\n+        return (plasma_pressure * 0.128 * (1.0 - dampener_envelope * 0.4)) + (normalized_flux * 0.88)\n`;
+    const blob = new Blob([dummyPatch], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'stark_remediation_mark85.patch';
+    link.click();
+  }
+
+  function triggerApplyPatch() {
+    const confirmed = confirm("CONFIRMATION PROTOCOL:\\nApply automated patch directly to working tree 'stark-core/mark-85-flight-os'?");
+    if (confirmed) {
+      alert("SUCCESS: Patch applied cleanly to workspace. Backup created at .git/stark_patch_backup.");
+    }
+  }
+
+  function triggerCreatePR() {
+    alert("GITHUB PULL REQUEST INITIATED:\\nBranch: fix/plasma-stabilizer-leak -> main\\nStatus: All 52 automated checks passing. Reviewer T. STARK auto-assigned.");
+  }
+</script></div></main></div></body></html>
