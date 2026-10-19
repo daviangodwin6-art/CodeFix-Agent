@@ -127,7 +127,7 @@ export default function Composer({ form, setForm, me, repos, onRefreshRepos, bus
           <label htmlFor="task-input" className={LABEL + " flex min-w-0 items-center gap-1.5"}>
             <Icon name="terminal" className="text-base text-accent-fg" /><span className="truncate">{type.label}</span>
           </label>
-          <span id="task-hint" className="shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">Ctrl+Enter to run</span>
+          <span id="task-hint" className="hidden sm:inline shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">Ctrl+Enter to run</span>
         </div>
         <textarea id="task-input" rows="4" value={form.task} readOnly={busy} aria-describedby={"task-hint" + (form.taskType === "feature" ? " task-hint-2" : "")}
                   onChange={(e) => set({ task: e.target.value })}

@@ -7,7 +7,7 @@ import Composer, { TYPES } from "./components/ConfigColumn.jsx";
 import Projects from "./components/Projects.jsx";
 import ProjectView from "./components/ProjectView.jsx";
 import RunView from "./components/Results.jsx";
-import { CARD, Icon, KIND, Notice, short, Spinner } from "./components/ui.jsx";
+import { CARD_CORNERS, KIND, LABEL, Logo, Notice, short, Spinner } from "./components/ui.jsx";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const SIGNED_OUT = { login: "", signed_in: false };
@@ -253,10 +253,10 @@ export default function App() {
 
   if (online === null) { // first /api/me answer decides between login page and console
     return (
-      <div role="status" className="min-h-screen flex flex-col items-center justify-center gap-3 text-ink-2">
-        <span className="w-12 h-12 rounded-xl bg-accent text-white flex items-center justify-center"><Icon name="terminal" className="text-3xl" /></span>
+      <div role="status" className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center text-ink-2">
+        <Logo className="w-20 h-20" />
         <Spinner className="text-2xl text-accent-fg" />
-        <p className="text-sm">Connecting to the local server…</p>
+        <p className={LABEL}>Connecting to the local server…</p>
       </div>
     );
   }
@@ -276,11 +276,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-ink">
-      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:text-white focus:px-3 focus:py-2">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-sm focus:bg-accent focus:text-ink focus:border focus:border-accent-fg focus:px-3 focus:py-2 focus:font-mono focus:text-xs focus:font-semibold focus:uppercase focus:tracking-[0.1em]">Skip to content</a>
       <Header me={me} online={online} crumbs={crumbs}
               onSignIn={() => setOffline(false)} onSignOut={() => { setOffline(false); authAction(auth.signOut); }} />
       <div className="flex-1 lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
-        <nav aria-label="Projects" className="bg-surface border-b border-line lg:border-b-0 lg:border-r lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)]">
+        <nav aria-label="Projects" className="bg-surface border-b border-line lg:border-b-0 lg:border-r lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:self-start">
           <Projects projects={projects} activeId={active ? active.project_id : ""} homeActive={viewKey === "home"} signedIn={me.signed_in}
                     onSelect={select} onNew={goHome} onSignIn={() => (auth.configured ? authAction(auth.signIn) : setOffline(false))} />
         </nav>
@@ -301,15 +301,18 @@ export default function App() {
           ) : (
             <>
               <div>
-                <h1 id="view-title" tabIndex={-1} className="text-2xl font-semibold tracking-tight focus:outline-none">Start a new run</h1>
+                <h1 id="view-title" tabIndex={-1} className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-tight focus:outline-none">Start a new run</h1>
                 <p className="mt-1 text-sm text-ink-2">Describe a bug or a feature and CodeFix changes the code, tests it and verifies the result.</p>
               </div>
-              <div className={CARD + " p-5 lg:p-6"}>{composer}</div>
+              <div className={CARD_CORNERS + " hud-corners-red p-5 lg:p-6"}>{composer}</div>
               <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {STEPS.map(([name, text], i) => (
-                  <li key={name} className="text-sm">
-                    <span className="font-semibold text-ink">{i + 1}. {name}</span>
-                    <span className="block mt-0.5 text-ink-2">{text}</span>
+                  <li key={name} className="rounded-sm border border-line bg-surface px-4 py-3">
+                    <span className="flex items-baseline gap-2 font-mono text-xs font-semibold">
+                      <span className="text-gold">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="uppercase tracking-[0.12em] text-ink">{name}</span>
+                    </span>
+                    <span className="block mt-1.5 text-sm text-ink-2">{text}</span>
                   </li>
                 ))}
               </ol>

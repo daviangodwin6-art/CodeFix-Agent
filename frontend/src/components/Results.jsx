@@ -61,6 +61,7 @@ function Banner({ run, elapsed }) {
     : "No acceptable change after " + plural(r.attempts, "attempt") + ". Nothing was committed.";
   const files = useMemo(() => Array.isArray(r.files_changed) ? r.files_changed.length : r.diff ? parseDiff(r.diff).length : null, [r.files_changed, r.diff]);
   const tests = run.status !== "env_failed" && r.baseline.passed != null && r.after.passed != null;
+  const afterRan = r.after.total > 0; // a run that stopped before the after-patch tests reports 0 of 0
   const bad = tests && r.after.failed > 0;
   return (
     <section aria-label="Outcome" className={CARD_CORNERS + " p-4 sm:p-5 min-w-0"}>
@@ -77,7 +78,7 @@ function Banner({ run, elapsed }) {
       </div>
       <dl className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
         {elapsed != null && <Stat label="Duration">{duration(elapsed)}</Stat>}
-        {tests && <Stat label="Tests passing" tone={bad ? "text-bad" : "text-ok"}>{r.baseline.passed} → {r.after.passed}{r.after.total != null && " of " + r.after.total}</Stat>}
+        {tests && <Stat label="Tests passing" tone={!afterRan ? "text-ink-2" : bad ? "text-bad" : "text-ok"}>{r.baseline.passed} → {afterRan ? <>{r.after.passed}{r.after.total != null && " of " + r.after.total}</> : "not run"}</Stat>}
         {files != null && <Stat label="Files changed">{files}</Stat>}
         <Stat label="Attempts">{r.attempts}</Stat>
         {r.commit_sha && (
@@ -94,6 +95,7 @@ function TestMatrix({ r }) {
   const gained = (r.after.passed || 0) - (r.baseline.passed || 0);
   const rows = [["Passed", "passed"], ["Failed", "failed"], ["Total runs", "total"]];
   const failed = r.after.failed > 0;
+  const ran = r.after.total > 0; // tests never ran after the patch: show it, don't colour 0 as a pass
   const cell = (value, tone, icon) => (
     <span className={"inline-flex items-center gap-1 " + tone}>
       {icon && <Icon name={icon} className="text-base" />}<CountUp value={value} />
@@ -119,16 +121,18 @@ function TestMatrix({ r }) {
                   {cell(r.baseline[key], key === "failed" && r.baseline.failed > 0 ? "text-bad font-semibold" : "text-ink-2", key === "failed" && r.baseline.failed > 0 ? "cancel" : null)}
                 </td>
                 <td className="py-2 tabular-nums">
-                  {cell(r.after[key], key === "passed" ? "text-ok font-semibold" : key === "failed" && failed ? "text-bad font-semibold" : "text-ink",
-                    key === "passed" ? "check_circle" : key === "failed" && failed ? "cancel" : null)}
-                  {key === "passed" && <span className="text-ok"> Passed{gained > 0 && " (+" + gained + ")"}</span>}
+                  {ran ? <>
+                    {cell(r.after[key], key === "passed" ? "text-ok font-semibold" : key === "failed" && failed ? "text-bad font-semibold" : "text-ink",
+                      key === "passed" ? "check_circle" : key === "failed" && failed ? "cancel" : null)}
+                    {key === "passed" && <span className="text-ok"> Passed{gained > 0 && " (+" + gained + ")"}</span>}
+                  </> : <span className="text-ink-3">not run</span>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className={"mt-2 border-t border-line pt-2 text-xs " + (failed ? "text-bad" : "text-ok")}>
-          ==== {r.after.passed || 0} passed, {r.after.failed || 0} failed ====
+        <p className={"mt-2 border-t border-line pt-2 text-xs font-mono " + (!ran ? "text-ink-2" : failed ? "text-bad" : "text-ok")}>
+          {!ran ? "==== after-patch tests not run ====" : <>==== {r.after.passed || 0} passed, {r.after.failed || 0} failed ====</>}
         </p>
       </div>
     </Section>

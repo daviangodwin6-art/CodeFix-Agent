@@ -211,5 +211,7 @@ The references are filled with invented telemetry. The product shows **only real
   `STAGE 4/10`, `HEAD abc1234`, `N FILES`), corner ticks, grids, the reactor mark, dial rings fed by real counts.
 - Not allowed: invented numbers (latency, CPU, memory, tokens, confidence, coordinates), fake names or ranks,
   fake version or build tags, Stark Industries / Marvel branding text. The product name stays "CodeFix Agent".
+- A value the run never produced is shown as "not run" in a neutral colour, never as a green 0 (e.g. the after-patch
+  test counts of a run that stopped before testing).
 - User-facing sentences, labels and messages keep their current wording (they are quoted in the requirements);
   only their styling changes.
