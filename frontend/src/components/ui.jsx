@@ -10,7 +10,7 @@ export function Icon({ name, className = "", fill = false }) {
 // Level-1 panel (hud-panel in index.css carries bg, border, radius, top-edge light leak); callers add padding.
 export const CARD = "hud-panel";
 export const CARD_CORNERS = CARD + " hud-corners";
-export const LABEL = "font-mono text-[11px] leading-4 font-semibold uppercase tracking-[0.12em] text-ink-2";
+export const LABEL = "font-mono text-xs leading-4 font-semibold uppercase tracking-[0.12em] text-ink-2";
 
 // Hover styles use enabled: so disabled buttons get no glow or colour change (buttons only, not links).
 const BTN_BASE = "inline-flex items-center justify-center gap-1.5 rounded-sm whitespace-nowrap transition-[color,background-color,border-color,box-shadow] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none";
@@ -21,7 +21,7 @@ const BTN_VARIANT = {
   ghost: BTN_MONO + "text-ink-2 enabled:hover:bg-raised enabled:hover:text-ink",
   danger: BTN_MONO + "border border-bad text-bad enabled:hover:bg-bad/10",
 };
-const BTN_SIZE = { sm: "h-8 px-3 text-[11px]", md: "h-9 px-4 text-xs", lg: "h-12 px-6 text-sm" };
+const BTN_SIZE = { sm: "h-8 px-3 text-xs", md: "h-9 px-4 text-[0.8125rem]", lg: "h-12 px-6 text-sm" };
 export const button = (variant = "secondary", size = "md") => [BTN_BASE, BTN_VARIANT[variant], BTN_SIZE[size]].join(" ");
 
 export const FIELD = "w-full rounded-sm bg-canvas border border-line-strong text-ink text-sm px-3 py-2 placeholder:text-ink-3 caret-gold focus:border-accent-fg focus:outline-none focus:ring-1 focus:ring-accent-fg focus:shadow-inner-cyan disabled:opacity-60 read-only:opacity-80";
@@ -34,7 +34,7 @@ export function PanelTitle({ icon, children, meta, as: Tag = "h2", id, className
         {icon && <Icon name={icon} className="text-lg text-accent-fg shrink-0" />}
         <Tag id={id} className="min-w-0 break-words font-mono text-xs font-semibold uppercase tracking-[0.12em] text-ink">{children}</Tag>
       </div>
-      {meta != null && meta !== false && <span className="shrink-0 font-mono text-[11px] uppercase tracking-[0.1em] text-gold">{meta}</span>}
+      {meta != null && meta !== false && <span className="shrink-0 font-mono text-xs uppercase tracking-[0.1em] text-gold">{meta}</span>}
     </div>
   );
 }
@@ -133,7 +133,7 @@ export function Notice({ tone = "info", title, children, onDismiss, className = 
   );
 }
 
-const CHIP = "inline-flex items-center gap-1.5 rounded-sm border px-2 h-6 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] whitespace-nowrap ";
+const CHIP = "inline-flex items-center gap-1.5 rounded-sm border px-2 h-6 font-mono text-xs font-semibold uppercase tracking-[0.08em] whitespace-nowrap ";
 const STATUS = {
   success: { label: "Succeeded", running: false, cls: "text-ok border-ok/40 bg-ok/10" },
   failed: { label: "Failed", running: false, cls: "text-bad border-bad/40 bg-bad/10" },
@@ -181,7 +181,7 @@ export const KIND = {
 
 export function KindBadge({ kind }) {
   const k = KIND[kind] || KIND.local;
-  return <span className={"inline-flex items-center rounded-sm border px-1.5 h-5 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] whitespace-nowrap shrink-0 " + k.tone}>{k.label}</span>;
+  return <span className={"inline-flex items-center rounded-sm border px-1.5 h-5 font-mono text-xs font-semibold uppercase tracking-[0.08em] whitespace-nowrap shrink-0 " + k.tone}>{k.label}</span>;
 }
 
 // Modal on the native <dialog>: the browser traps focus, closes on Escape and returns focus to the opener.

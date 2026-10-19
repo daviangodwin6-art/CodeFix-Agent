@@ -23,7 +23,7 @@ export function parseDiff(diff) {
   return files;
 }
 
-const CHIP = "inline-flex items-center gap-1.5 rounded-sm border px-2 h-6 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] whitespace-nowrap ";
+const CHIP = "inline-flex items-center gap-1.5 rounded-sm border px-2 h-6 font-mono text-xs font-semibold uppercase tracking-[0.08em] whitespace-nowrap ";
 const TONE = {
   ok: "text-ok border-ok/40 bg-ok/10",
   bad: "text-bad border-bad/40 bg-bad/10",
@@ -219,7 +219,7 @@ export function Changes({ r }) {
             <span className={CHIP + TONE.bad}>-{file.del} removals</span>
           </div>
         </div>
-        <div tabIndex={0} role="region" aria-label={"Diff of " + file.path} className="overflow-auto max-h-[560px] bg-canvas text-ink font-mono text-[13px] leading-relaxed py-1">
+        <div tabIndex={0} role="region" aria-label={"Diff of " + file.path} className="overflow-auto max-h-[560px] bg-canvas text-ink font-mono text-sm leading-relaxed py-1">
           <div ref={code} className="w-max min-w-full">
             {file.lines.map((line, i) => {
               if (line.kind === "hunk") return <div key={i} className="bg-raised text-gold text-xs py-1 px-3 my-1 border-l-2 border-transparent whitespace-pre select-none">{line.text}</div>;
@@ -280,7 +280,7 @@ function VerifiedImports({ r }) {
               <li key={item} className="text-ink-2 px-2 py-1.5 flex items-center gap-2">
                 <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-ok text-ok shadow-[0_0_6px_currentColor] shrink-0" />
                 <span className="truncate flex-1" title={m ? m[1] : String(item)}>{m ? m[1] : String(item)}</span>
-                {m && <span className="text-[11px] uppercase tracking-[0.08em] text-ink-3 px-1.5 rounded-sm border border-line shrink-0">{m[2]}</span>}
+                {m && <span className="text-xs uppercase tracking-[0.08em] text-ink-3 px-1.5 rounded-sm border border-line shrink-0">{m[2]}</span>}
               </li>
             );
           })}
@@ -301,7 +301,7 @@ function Working({ steps }) {
       {/* motion: the Ring's outer dashed circle would rotate slowly while a step runs */}
       <Ring value={value} size={176} label={done + " of " + total + " steps done"}>
         <span className="font-display text-4xl font-bold leading-none tabular-nums text-ink">{Math.round(value * 100)}<span className="text-xl text-ink-2">%</span></span>
-        <span className="mt-1.5 max-w-[104px] break-words font-mono text-[11px] leading-4 font-semibold uppercase tracking-[0.1em] text-accent-fg">{current ? current.name : "starting"}</span>
+        <span className="mt-1.5 max-w-[104px] break-words font-mono text-xs leading-4 font-semibold uppercase tracking-[0.1em] text-accent-fg">{current ? current.name : "starting"}</span>
       </Ring>
       <div className="min-w-0 flex-1 w-full">
         <p className={LABEL}>Working on</p>

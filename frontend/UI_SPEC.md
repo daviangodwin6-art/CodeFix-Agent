@@ -59,8 +59,10 @@ Fonts: **Space Grotesk** (`font-display`) for view titles, panel display titles 
 **Geist** (`font-sans`, body; stands in for DESIGN.md's Inter, which is not bundled) for sentences;
 **JetBrains Mono** (`font-mono`) for HUD labels, chips, buttons, numbers, ids, shas, paths, diffs.
 Type scale: view title `font-display text-2xl sm:text-3xl font-bold tracking-tight` (uppercase allowed on short titles);
-panel title = `PanelTitle`; HUD micro-label = `LABEL` (mono 11px semibold uppercase, tracking 0.12em) — 11px is the
-floor and only for uppercase labels; body `text-sm`; meta `text-xs`.
+panel title = `PanelTitle`; HUD micro-label = `LABEL` (mono 12px semibold uppercase, tracking 0.12em) — 12px (`text-xs`) is the
+floor for all text; body `text-sm`; meta `text-xs`.
+Wide screens: the root font size steps up to 112.5% at ≥1600px (laptops keep 100%), so type and spacing
+(all rem) scale together; nothing uses fixed px font sizes.
 Uppercase is a CSS transform (`uppercase`) on short labels, buttons and titles only — never on sentences, task text,
 paths or error messages; the DOM text keeps its normal case (requirements quote exact strings).
 
@@ -91,7 +93,7 @@ CSS component classes (`index.css`, `@layer components`):
 JS (`ui.jsx`):
 - `Icon`, `short`, `plural`, `duration`, `ago`, `KIND`, `Copy`, `Spinner`, `Dialog`, `ConfirmDialog` — same API.
 - `CARD` = level-1 panel (`hud-panel`); `CARD_CORNERS` = `CARD` + `hud-corners`.
-- `LABEL` → class string for HUD micro-labels (mono 11px uppercase tracking, `text-ink-2`).
+- `LABEL` → class string for HUD micro-labels (mono 12px uppercase tracking, `text-ink-2`).
 - `PanelTitle({ icon, children, meta, as = "h2", id, className })` — panel header row: cyan icon, mono uppercase title
   in `ink`, optional right-aligned `meta` (mono, `gold`).
 - `Stat({ label, children, tone, className })` — telemetry tile (`raised`, 1px line): `LABEL` dt, mono value dd.
@@ -101,11 +103,11 @@ JS (`ui.jsx`):
   - `secondary` — "telemetry action": surface fill, 1px line; hover cyan border/label + inner cyan glow.
   - `ghost` — no border, `ink-2`, hover `ink` on `raised`.
   - `danger` — `bad` outline + label; hover red tint.
-  - Sizes `sm` (h-8, 11px), `md` (h-9, 12px), `lg` (h-12, 14px; ≥44px touch target). Disabled = 50% opacity, no glow.
+  - Sizes `sm` (h-8, 12px), `md` (h-9, 13px), `lg` (h-12, 14px; ≥44px touch target). Disabled = 50% opacity, no glow.
 - `FIELD` — obsidian (`canvas`) fill, 1px `line-strong`, gold caret; focus: cyan border + 1px cyan ring + inner cyan aura.
 - `Notice({ tone, title, children, onDismiss, className })` — tinted box with a 2px left rail in the tone colour; mono
   uppercase title; `role="alert"` for `bad`, `role="status"` otherwise.
-- `StatusPill({ status })` — telemetry chip: 2px radius, 1px tone border, mono 11px uppercase, glowing pip (spinner
+- `StatusPill({ status })` — telemetry chip: 2px radius, 1px tone border, mono 12px uppercase, glowing pip (spinner
   while running) + text. Same labels as before.
 - `KindBadge({ kind })` — chip: My repo = cyan, Other's = gold, Local = steel.
 - `Skeleton({ className })` — `raised` block, 2px radius (pulse only under `html.motion`).
@@ -120,7 +122,7 @@ JS (`ui.jsx`):
 [skip link "Skip to content"]
 header (sticky, h-14, bg-surface, border-b)
   logo + "CodeFix Agent" | breadcrumb | ……… | API status pill | Motion switch | account
-body  lg: grid [280px | 1fr]
+body  lg: grid [18rem | 1fr], 2xl: [21rem | 1fr]; main max-w-[110rem], so wide screens are filled
   nav#projects  (sticky under header, own scroll)   main#main
     "New run" button                                  global error Notice (dismissable)
     filter box (when > 4 projects)                    one view: Home | Project | Run
