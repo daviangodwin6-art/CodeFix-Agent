@@ -1,9 +1,16 @@
-# CodeFix Agent — UI/UX spec (remake of the "Obsidian Kinetic" UI)
+# CodeFix Agent — UI/UX spec (Stark HUD visual system)
 
 Scope: frontend only. The API contract (`src/api.js`, `server.py`) does not change. Every feature in
-`Frontend_Requirements.docx` (FR-1 … FR-12) stays wired. No new dependencies.
+`design/Frontend_Requirements.docx` (FR-1 … FR-12) stays wired. The only dependency added for the HUD is the
+Space Grotesk font (`@fontsource-variable/space-grotesk`).
 
-## 1. What was wrong (audit)
+History: the information architecture (app shell, views, tabs, unified run view; §1 and §4–§9) comes from the
+UI/UX remake. The HUD restyle (§2, §3, §10, §11) changes the look only: tokens, surfaces, panel chrome, type,
+status colours and icons. Visual references: `design/stark_hud/*/screen.png` (Google Stitch exports), tokens from
+`design/stark_hud/stark_hud_precision_engineering/DESIGN.md`. New motion is out of scope; spots where an animation
+belongs carry a `// motion:` note.
+
+## 1. What was wrong (audit of the pre-remake UI)
 
 | Problem | Where | Fix |
 |---|---|---|
@@ -19,46 +26,93 @@ Scope: frontend only. The API contract (`src/api.js`, `server.py`) does not chan
 | Copy button gives no feedback | ui.jsx | "Copied" state + live region |
 | Run button allowed with an empty task (server answers 400) | ConfigColumn | Disabled until a task is typed |
 
-## 2. Design tokens (tailwind.config.js)
+## 2. HUD design tokens (`tailwind.config.js`, `src/index.css`)
 
-Dark only, solid surfaces. Use Tailwind default type scale and radii (custom fontSize / radius / spacing tokens are removed).
+Dark only. The token **names** from the remake are kept so every screen keeps working; their **values** are now the
+HUD palette. Two tokens are new: `gold` and `reactor`.
 
-| Token | Hex | Use |
-|---|---|---|
-| `canvas` | `#0b0f17` | page background |
-| `surface` | `#121826` | cards, sidebar, header |
-| `raised` | `#1a2233` | inputs, hover rows, menus, dialogs |
-| `line` | `#253049` | borders, dividers |
-| `line-strong` | `#33405c` | input borders, hover borders |
-| `ink` | `#e6eaf2` | primary text |
-| `ink-2` | `#b4bccb` | secondary text |
-| `ink-3` | `#8a94a8` | meta / hints (minimum for text; ≥4.5:1 on surface) |
-| `accent` | `#2f6fe4` | primary button bg (white text ≥4.5:1) |
-| `accent-hover` | `#3d7cf0` | primary hover |
-| `accent-fg` | `#8ab4ff` | accent used as text/icon on dark, focus ring, selection |
-| `ok` | `#34d399` | success text/icons; backgrounds use `bg-ok/10`, borders `border-ok/30` |
-| `warn` | `#fbbf24` | busy / retry / env fault |
-| `bad` | `#f87171` | failure, destructive |
+| Token | Hex | DESIGN.md name | Use | Contrast (text) |
+|---|---|---|---|---|
+| `canvas` | `#07090D` | Obsidian Black | page floor, input fill, terminal / diff wells | — |
+| `surface` | `#10151D` | Deep Armor | panels (level 1), header, sidebar | — |
+| `raised` | `#171F2A` | Gunmetal | tiles inside panels, hover rows, menus, dialogs (level 2) | — |
+| `line` | `#303B49` | Dark Titanium | panel perimeters, dividers | — |
+| `line-strong` | `#5A6779` | — | input / control outlines, inactive corner brackets (≥3:1 on canvas, so fields stay findable) | — |
+| `ink` | `#F2F5F8` | Titanium White | primary text, button label on red | 15.2 on raised |
+| `ink-2` | `#A0ADBC` | Steel Grey | secondary text, labels | 7.3 on raised |
+| `ink-3` | `#8D9AAB` | — | meta / hints / diff gutters (floor for any text) | 5.8 on raised |
+| `accent` | `#D61F24` | Armor Red (darkened for AA) | primary-action fill, active-nav fill, brackets on the run composer | ink on it 4.7 |
+| `accent-hover` | `#E62429` | Armor Red | primary hover fill (label turns `#fff`, 4.5) | — |
+| `reactor` | `#FF454A` | Reactor Red | glow colour, decorative pips, large display text only | 4.9 on raised |
+| `accent-fg` | `#63DDF5` | Holographic Cyan | active / running / info, focus ring, selection, brackets, links | 10.4 on raised |
+| `gold` | `#F5B942` | Stark Gold | structural highlights: section codes, counts, kind "Other's", telemetry values | 9.4 on raised |
+| `ok` | `#55E6A5` | Arc Green | success, additions | 10.5 on raised |
+| `warn` | `#FFB84D` | Amber Alert | busy, retry, env fault | 9.7 on raised |
+| `bad` | `#FF8588` | red-shifted text | failure, destructive, deletions | 7.1 on raised |
 
-Fonts: Geist Variable (UI), JetBrains Mono (code, ids, shas, paths). Inter is dropped.
-Sizes: body `text-sm` (14px); meta `text-xs` (12px, never smaller except diff gutters); card titles `text-base font-semibold`; view titles `text-xl`/`text-2xl font-semibold tracking-tight`.
-Radius: controls `rounded-md`, cards `rounded-xl`, pills `rounded-full`.
-Focus: `:focus-visible { outline: 2px solid accent-fg; outline-offset: 2px }` everywhere; never remove it.
-Motion: keep the Motion switch (FR-11) and `html.motion` gating; keep anime.js enter/pop/CountUp; drop the glass spotlight, drift, sheen, scan.
+Rules:
+- `#E62429` / `accent` is **never** used for text (4.1:1). Red text is `bad`; red decoration is `accent`/`reactor`.
+- Tinted chips/notices: `bg-<tone>/10 border-<tone>/40 text-<tone>` — every tone keeps ≥ 6.5:1 on its own tint.
+- Status is never colour alone: always text, plus an icon or pip.
 
-## 3. Shared primitives (`src/components/ui.jsx`)
+Fonts: **Space Grotesk** (`font-display`) for view titles, panel display titles and the primary button;
+**Geist** (`font-sans`, body; stands in for DESIGN.md's Inter, which is not bundled) for sentences;
+**JetBrains Mono** (`font-mono`) for HUD labels, chips, buttons, numbers, ids, shas, paths, diffs.
+Type scale: view title `font-display text-2xl sm:text-3xl font-bold tracking-tight` (uppercase allowed on short titles);
+panel title = `PanelTitle`; HUD micro-label = `LABEL` (mono 11px semibold uppercase, tracking 0.12em) — 11px is the
+floor and only for uppercase labels; body `text-sm`; meta `text-xs`.
+Uppercase is a CSS transform (`uppercase`) on short labels, buttons and titles only — never on sentences, task text,
+paths or error messages; the DOM text keeps its normal case (requirements quote exact strings).
 
-- `Icon` (unchanged API), `short`, `plural`, `duration`, `ago`, `KIND`, `KindBadge` (restyled).
-- `button(variant = "secondary", size = "md")` → class string. Variants: `primary`, `secondary`, `ghost`, `danger`. Sizes: `sm` (h-8), `md` (h-9), `lg` (h-11). Disabled = 50% opacity + not-allowed.
-- `FIELD` → class string for input / select / textarea.
-- `CARD` → `"rounded-xl border border-line bg-surface"`.
-- `Notice({ tone: "info"|"ok"|"warn"|"bad", title, children, onDismiss, className })` — icon + text; `role="alert"` for `bad`, `role="status"` otherwise; optional dismiss button (`aria-label="Dismiss"`).
-- `StatusPill({ status })` — `success` "Succeeded", `failed` "Failed", `env_failed` "Env failed", `running` "Running" (spinner), anything else "Not started". Icon + text (never colour alone).
-- `Copy({ text, label = "Copy" })` — shows "Copied" for 1.5 s; announces via `aria-live`.
-- `Skeleton({ className })` — pulsing block (`motion-safe` pulse only when `html.motion`).
-- `Spinner({ className })`.
-- `Dialog({ title, onClose, children })` (native `<dialog>`, unchanged behaviour, restyled) and
-  `ConfirmDialog({ title, children, confirmLabel, danger, onConfirm, onClose })` — Cancel + confirm buttons; Cancel is autofocused.
+Shape: angular. Panels `rounded` (4px), controls and chips `rounded-sm` (2px). `rounded-full` only for status pips,
+the avatar, dial rings and the motion switch knob.
+
+Depth (no drop shadows):
+- Canvas: `#07090D` plus a 32px technical grid (`rgba(48,59,73,.25)`) on `body`.
+- Panel (level 1): `surface` + 1px `line` + a cyan top-edge light leak (`hud-panel`).
+- Floating (level 2: dialogs, menus): `raised` + 1px `line` + `shadow-aura` (inner white 5% + cyan 12px aura).
+- Glows: `shadow-glow-red` (primary hover), `shadow-glow-cyan` (active rings), `shadow-inner-cyan` (secondary hover, focused field).
+
+Focus: `:focus-visible { outline: 2px solid accent-fg; outline-offset: 2px }`. Chamfered primary buttons draw the
+outline inside (`outline-offset: -4px`, `ink` colour) because `clip-path` would cut an outside ring. Never remove focus.
+
+Motion: unchanged. `html.motion` gates every animation (Motion switch, FR-11, default from `prefers-reduced-motion`);
+anime.js `enter` / `pop` / `CountUp` stay. No new keyframes in this round.
+
+## 3. Shared primitives (`src/components/ui.jsx`, `src/index.css`)
+
+CSS component classes (`index.css`, `@layer components`):
+- `hud-panel` — level-1 panel: `relative`, surface fill, 1px line border, 4px radius, cyan top-edge light leak.
+- `hud-corners` — L-shaped 10px corner ticks on the top-left and bottom-right vertices (cyan). Add
+  `hud-corners-red` for red ticks (the run composer), `hud-corners-dim` for `line-strong` ticks. Needs a positioned element.
+- `hud-chamfer` — 45° notches on the top-right and bottom-left corners (`clip-path`) for primary triggers.
+- `hud-well` — recessed `canvas` box with 1px line border for terminals, code and diffs.
+
+JS (`ui.jsx`):
+- `Icon`, `short`, `plural`, `duration`, `ago`, `KIND`, `Copy`, `Spinner`, `Dialog`, `ConfirmDialog` — same API.
+- `CARD` = level-1 panel (`hud-panel`); `CARD_CORNERS` = `CARD` + `hud-corners`.
+- `LABEL` → class string for HUD micro-labels (mono 11px uppercase tracking, `text-ink-2`).
+- `PanelTitle({ icon, children, meta, as = "h2", id, className })` — panel header row: cyan icon, mono uppercase title
+  in `ink`, optional right-aligned `meta` (mono, `gold`).
+- `Stat({ label, children, tone, className })` — telemetry tile (`raised`, 1px line): `LABEL` dt, mono value dd.
+  Must sit inside a `<dl>`.
+- `button(variant = "secondary", size = "md")` → class string. All buttons: mono, uppercase, tracking 0.08em, 2px radius.
+  - `primary` — "reactor action": red fill + `ink` label, chamfered, `font-display`; hover `accent-hover` + white label + red glow.
+  - `secondary` — "telemetry action": surface fill, 1px line; hover cyan border/label + inner cyan glow.
+  - `ghost` — no border, `ink-2`, hover `ink` on `raised`.
+  - `danger` — `bad` outline + label; hover red tint.
+  - Sizes `sm` (h-8, 11px), `md` (h-9, 12px), `lg` (h-12, 14px; ≥44px touch target). Disabled = 50% opacity, no glow.
+- `FIELD` — obsidian (`canvas`) fill, 1px `line-strong`, gold caret; focus: cyan border + 1px cyan ring + inner cyan aura.
+- `Notice({ tone, title, children, onDismiss, className })` — tinted box with a 2px left rail in the tone colour; mono
+  uppercase title; `role="alert"` for `bad`, `role="status"` otherwise.
+- `StatusPill({ status })` — telemetry chip: 2px radius, 1px tone border, mono 11px uppercase, glowing pip (spinner
+  while running) + text. Same labels as before.
+- `KindBadge({ kind })` — chip: My repo = cyan, Other's = gold, Local = steel.
+- `Skeleton({ className })` — `raised` block, 2px radius (pulse only under `html.motion`).
+- `Logo({ className })` — decorative SVG reactor mark (concentric rings), `aria-hidden`.
+- `Ring({ value, size, stroke, tone, children, label })` — SVG dial gauge (0…1); `role="img"` + `aria-label` from
+  `label`; children are centred inside. Only for real values (e.g. finished steps / total steps).
+- `Dialog` — level-2 surface (`raised`, `shadow-aura`, `hud-corners`), Space Grotesk title, dimmed + blurred backdrop.
 
 ## 4. App shell (`App.jsx`, `Header.jsx`, `Projects.jsx`)
 
@@ -136,3 +190,26 @@ Two columns on lg (left: name, one-line pitch, the 5 stages Understand / Plan / 
 ## 9. Accessibility checklist (all agents)
 
 Landmarks (`header`, `nav`, `main`), one `h1` per view, skip link, labels on every control, `aria-current` for active nav/step, visible focus, no colour-only status, 44px min touch targets on mobile for primary actions, `prefers-reduced-motion` respected via the Motion switch default, dialogs on native `<dialog>`, menus on native `popover`, no horizontal page scroll at 360px (diffs scroll inside their own box).
+
+## 10. HUD screen notes (reference → screen)
+
+| Reference (`design/stark_hud/…`) | Screen | What is taken | What is not |
+|---|---|---|---|
+| `system_access_console` | `Login.jsx` | single centred console panel with cyan top leak and corner ticks; reactor mark + dial rings; status chip row; red full-width "Continue with GitHub"; offline action as a recessed secondary bar; mono meta lines | fake coordinates, power/sync %, port, firmware, clearance text |
+| `engineering_command_console` | `App.jsx` Home, `ConfigColumn.jsx`, `Header.jsx` | header: reactor logo + display wordmark, mono breadcrumb chip bar, `API ONLINE` chip, `MOTION` switch, square avatar; composer panel with red corner brackets; Debug/Feature as two large selectable cards (still native radios); repository mode as a tab bar (native radios); task box as a terminal well; big chamfered red run button | sidebar section nav (we keep the Projects list), tokens/symbols/model counters, latency, chassis image, "reactor output" bar |
+| `project_intelligence_archive` | `Projects.jsx`, `ProjectView.jsx` | sidebar rows as ledger cards with a cyan left rail when active; mono meta; workspace header with display title and `::`-separated mono facts; state tiles as `Stat`s; run history rows with status pip + mono run line + chip; actions as a command matrix of telemetry buttons | totals strip with invented numbers, GPU/daemon tiles, hardware image |
+| `live_execution_hud` | `Progress.jsx`, `Results.jsx` (live) | run header with mono run id, stage chip `STAGE n/N`, mono timer; dial `Ring` showing finished/total steps; "Execution sequence" list with `01.` numbering, right-aligned mono state, red left rail + cyan pip on the running step; terminal-styled detail | CPU/MEM/sockets/RTT, velocity bar chart, fake log lines |
+| `verification_diff_report` | `Results.jsx` (finished) | outcome headline in display caps with tone chip; metric tiles (duration, tests, files, attempts, commit + Copy); file picker + diff in a `hud-well`; test matrix as a terminal panel; action bar | confidence %, cyclomatic complexity, memory footprint, "signed by" footer |
+
+Layout stays as §4–§8 (header + Projects sidebar + one main view; tri-pane only where the run view already has two columns).
+At 375px: everything stacks, no horizontal page scroll; diffs and terminals scroll inside their own box.
+
+## 11. Data honesty (all screens)
+
+The references are filled with invented telemetry. The product shows **only real data** from the API:
+- Allowed decoration: separators (`//`, `::`, `[ ]`), section codes made from real values (`RUN <id>`,
+  `STAGE 4/10`, `HEAD abc1234`, `N FILES`), corner ticks, grids, the reactor mark, dial rings fed by real counts.
+- Not allowed: invented numbers (latency, CPU, memory, tokens, confidence, coordinates), fake names or ranks,
+  fake version or build tags, Stark Industries / Marvel branding text. The product name stays "CodeFix Agent".
+- User-facing sentences, labels and messages keep their current wording (they are quoted in the requirements);
+  only their styling changes.

@@ -5,21 +5,75 @@
 @layer base {
   html, body { margin: 0; padding: 0; }
   html { color-scheme: dark; }
-  body { @apply bg-canvas text-ink font-sans antialiased; overscroll-behavior: none; }
-  ::selection { background: rgb(138 180 255 / 0.3); }
+  /* 32px technical grid, fixed so long pages keep it still */
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    overscroll-behavior: none;
+    background-image:
+      linear-gradient(rgba(48, 59, 73, 0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(48, 59, 73, 0.25) 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-attachment: fixed;
+  }
+  ::selection { background: rgb(99 221 245 / 0.3); }
   :focus-visible { outline: 2px solid theme("colors.accent-fg"); outline-offset: 2px; }
   [popover] { color: inherit; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: theme("colors.line"); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb { background: theme("colors.line"); border-radius: 0; }
   ::-webkit-scrollbar-thumb:hover { background-color: theme("colors.line-strong"); }
   * { scrollbar-width: thin; scrollbar-color: theme("colors.line") transparent; }
 }
 
+@layer components {
+  /* Level-1 panel: surface + 1px line + cyan top-edge light leak. No pseudo-elements, so .hud-corners can have them. */
+  .hud-panel {
+    position: relative;
+    background-color: theme("colors.surface");
+    background-image: linear-gradient(90deg, transparent, rgba(99, 221, 245, 0.25), transparent);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top;
+    border: 1px solid theme("colors.line");
+    border-radius: 4px;
+  }
+
+  /* L-shaped corner ticks (top-left, bottom-right). The element must be positioned: .hud-panel already is; for anything
+     else .hud-corners sets position: relative itself, except on <dialog> (native modal dialogs are position: fixed, and
+     :where() keeps the specificity at 0 so utilities like `absolute` still win). */
+  .hud-corners { --hud-corner: #63DDF5; }
+  .hud-corners:where(:not(dialog)) { position: relative; }
+  .hud-corners::before, .hud-corners::after {
+    content: ""; position: absolute; width: 10px; height: 10px; pointer-events: none;
+    border: 0 solid var(--hud-corner);
+  }
+  .hud-corners::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+  .hud-corners::after { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+  /* a <dialog> scrolls (overflow: auto), so its ticks sit just inside the edge instead of over the border */
+  dialog.hud-corners::before { top: 0; left: 0; }
+  dialog.hud-corners::after { bottom: 0; right: 0; }
+  .hud-corners-red { --hud-corner: #D61F24; }
+  .hud-corners-dim { --hud-corner: #5A6779; }
+
+  /* 10px 45-degree notches at top-right and bottom-left; clip-path cuts outside outlines, so focus draws inside */
+  .hud-chamfer {
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .hud-chamfer:focus-visible { outline-color: theme("colors.ink"); outline-offset: -4px; }
+
+  /* Recessed box for terminals, code and diffs */
+  .hud-well {
+    background-color: theme("colors.canvas");
+    border: 1px solid theme("colors.line");
+    border-radius: 2px;
+  }
+}
+
 /* Motion: html.motion is set by the Motion switch (src/motion.jsx), so everything here stops when motion is off. */
 @keyframes fade-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } }
-@keyframes pulse-ring { from { box-shadow: 0 0 0 0 rgb(138 180 255 / 0.5); } to { box-shadow: 0 0 0 8px rgb(138 180 255 / 0); } }
+@keyframes pulse-ring { from { box-shadow: 0 0 0 0 rgb(99 221 245 / 0.5); } to { box-shadow: 0 0 0 8px rgb(99 221 245 / 0); } }
 @keyframes skeleton { 50% { opacity: 0.5; } }
 
 .motion .fade-in { animation: fade-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .motion .pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
 .motion .skeleton { animation: skeleton 1.6s ease-in-out infinite; }
+/* motion: an edge-scan sweep on the primary button (.hud-chamfer) would go here */
