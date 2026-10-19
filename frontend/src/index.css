@@ -6,7 +6,6 @@
   html, body { margin: 0; padding: 0; }
   html { color-scheme: dark; }
   /* wide screens: everything is rem-based, so a larger root scales type and spacing together */
-  @media (min-width: 1280px) { html { font-size: 106.25%; } }
   @media (min-width: 1600px) { html { font-size: 112.5%; } }
   /* 32px technical grid, fixed so long pages keep it still */
   body {

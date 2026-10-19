@@ -61,7 +61,7 @@ Fonts: **Space Grotesk** (`font-display`) for view titles, panel display titles 
 Type scale: view title `font-display text-2xl sm:text-3xl font-bold tracking-tight` (uppercase allowed on short titles);
 panel title = `PanelTitle`; HUD micro-label = `LABEL` (mono 12px semibold uppercase, tracking 0.12em) — 12px (`text-xs`) is the
 floor for all text; body `text-sm`; meta `text-xs`.
-Wide screens: the root font size steps up to 106.25% at ≥1280px and 112.5% at ≥1600px, so type and spacing
+Wide screens: the root font size steps up to 112.5% at ≥1600px (laptops keep 100%), so type and spacing
 (all rem) scale together; nothing uses fixed px font sizes.
 Uppercase is a CSS transform (`uppercase`) on short labels, buttons and titles only — never on sentences, task text,
 paths or error messages; the DOM text keeps its normal case (requirements quote exact strings).
