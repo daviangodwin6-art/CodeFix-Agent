@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from "react";
 import { animate, utils } from "animejs";
-import { finished } from "../api.js";
+import { finished, isHttps } from "../api.js";
 import { CountUp, enter, pop, useAnime } from "../motion.jsx";
-import { CARD, Icon } from "./ui.jsx";
+import { BuildsOn, Steps } from "./Progress.jsx";
+import { button, CARD, Copy, Icon, Notice, plural, short, Spinner, StatusPill } from "./ui.jsx";
 
 // Unified diff -> [{ path, add, del, lines: [{ kind: "hunk" | "add" | "del" | "ctx", no, text }] }]
 export function parseDiff(diff) {
@@ -23,70 +24,62 @@ export function parseDiff(diff) {
 }
 
 const BANNER = {
-  success: { box: "bg-emerald-500/10 border-emerald-500/25", dot: "bg-emerald-600", icon: "verified", title: "text-emerald-200", text: "text-emerald-300",
-             chip: "bg-emerald-500/15 text-emerald-300 border-emerald-500/35", chipText: "CHANGE COMMITTED" },
-  failed: { box: "bg-rose-500/10 border-rose-500/25", dot: "bg-rose-600", icon: "cancel", title: "text-rose-200", text: "text-rose-300",
-            chip: "bg-rose-500/15 text-rose-300 border-rose-500/35", chipText: "WORKING COPY REVERTED" },
-  env_failed: { box: "bg-amber-500/10 border-amber-500/25", dot: "bg-amber-600", icon: "build_circle", title: "text-amber-200", text: "text-amber-300",
-                chip: "bg-amber-500/15 text-amber-200 border-amber-500/35", chipText: "RUN HALTED" },
+  success: { box: "border-ok/30 bg-ok/10", fg: "text-ok", icon: "verified", chip: "Change committed" },
+  failed: { box: "border-bad/30 bg-bad/10", fg: "text-bad", icon: "cancel", chip: "Working copy reverted" },
+  env_failed: { box: "border-warn/30 bg-warn/10", fg: "text-warn", icon: "build_circle", chip: "Run halted" },
 };
+const FINAL = { success: "Succeeded", failed: "Failed", env_failed: "Environment setup failed" };
+const H3 = "text-base font-semibold text-ink";
+const TILE = "bg-raised border border-line p-2.5 rounded-lg min-w-0";
+const TILE_LABEL = "text-xs text-ink-3";
 
 function Banner({ run }) {
   const r = run.result;
   const b = BANNER[run.status] || BANNER.failed;
   const feature = r.task_type === "feature";
-  const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
-
-  const title = run.status === "success" ? (feature ? "Feature Added Successfully" : "Repair Completed Successfully")
-    : run.status === "env_failed" ? "Environment Setup Failed" : (feature ? "Feature Run Failed" : "Repair Run Failed");
+  const title = run.status === "success" ? (feature ? "Feature added" : "Repair completed")
+    : run.status === "env_failed" ? "Environment setup failed" : (feature ? "Feature run failed" : "Repair failed");
   const text = run.status === "success"
     ? "Done in " + plural(r.attempts, "attempt") + " • " + plural(r.regressions.length, "regression") + " • " + r.after.passed + " of " + r.after.total + " tests passing"
     : run.status === "env_failed" ? "The virtual environment, the dependency install or pytest itself could not run."
     : "No acceptable change after " + plural(r.attempts, "attempt") + ". Nothing was committed.";
-
   return (
-    <div className={"border rounded-xl p-3.5 shadow-2xs " + b.box}>
-      <div className="flex items-center gap-3">
-        <div data-pop className={"w-9 h-9 rounded-full text-white flex items-center justify-center shrink-0 shadow-xs " + b.dot}>
-          <Icon name={b.icon} fill className="text-[20px]" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className={"text-sm font-bold " + b.title}>{title}</div>
-          <p className={"text-xs mt-0.5 " + b.text}>{text}</p>
-        </div>
-        <span className={"hidden sm:inline font-mono text-xs px-2.5 py-1 rounded font-semibold border whitespace-nowrap " + b.chip}>{b.chipText}</span>
+    <div className={"border rounded-xl p-4 flex items-center gap-3 " + b.box}>
+      <span data-pop className={"shrink-0 " + b.fg}><Icon name={b.icon} fill className="text-3xl" /></span>
+      <div className="flex-1 min-w-0">
+        <p className={"text-base font-semibold " + b.fg}>{title}</p>
+        <p className="text-sm text-ink-2 mt-0.5 break-words">{text}</p>
       </div>
+      <span className={"hidden sm:inline text-xs px-2.5 py-1 rounded-full border font-medium whitespace-nowrap " + b.box + " " + b.fg}>{b.chip}</span>
     </div>
   );
 }
 
 function TestMatrix({ r }) {
   const gained = r.after.passed - r.baseline.passed;
-  const rows = [["Passed", "passed"], ["Failed", "failed"], ["Total Runs", "total"]];
+  const rows = [["Passed", "passed"], ["Failed", "failed"], ["Total runs", "total"]];
   return (
-    <div className={CARD + " md:col-span-7 p-3.5"}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-slate-50">
-          <Icon name="fact_check" className="text-[17px] text-emerald-400" />
-          <h3 className="font-semibold text-xs">Test Results Matrix</h3>
-        </div>
-        <span className="font-mono text-[10px] bg-white/[0.06] text-slate-400 px-1.5 py-0.5 rounded border border-white/[0.08]">pytest</span>
+    <section className={CARD + " p-5 min-w-0"} aria-labelledby="matrix-title">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h3 id="matrix-title" className={H3}>Test results</h3>
+        <span className="font-mono text-xs bg-raised text-ink-2 px-1.5 py-0.5 rounded border border-line">pytest</span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left font-mono text-xs">
+        <table className="w-full text-left font-mono text-sm">
+          <caption className="sr-only">Test counts before and after the change</caption>
           <thead>
-            <tr className="bg-white/[0.06] text-slate-400 text-[10px] uppercase tracking-wider">
-              <th scope="col" className="py-1 px-2.5 rounded-l">Metric</th>
-              <th scope="col" className="py-1 px-2.5">Before</th>
-              <th scope="col" className="py-1 px-2.5 rounded-r">After Patch</th>
+            <tr className="text-ink-3 text-xs">
+              <th scope="col" className="py-1 pr-3 font-medium">Metric</th>
+              <th scope="col" className="py-1 pr-3 font-medium">Before</th>
+              <th scope="col" className="py-1 font-medium">After patch</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.06] text-slate-300">
-            {rows.map(([label, key], i) => (
-              <tr key={key} className={i === 1 ? "bg-white/[0.03]" : ""}>
-                <th scope="row" className="py-1.5 px-2.5 font-medium">{label}</th>
-                <td className={"py-1.5 px-2.5 tabular-nums " + (key === "failed" && r.baseline.failed > 0 ? "text-rose-400 font-semibold" : "text-slate-400")}><CountUp value={r.baseline[key]} /></td>
-                <td className={"py-1.5 px-2.5 tabular-nums " + (key === "passed" ? "text-emerald-300 font-bold" : key === "failed" && r.after.failed > 0 ? "text-rose-400 font-bold" : "font-semibold text-slate-200")}>
+          <tbody className="divide-y divide-line text-ink-2">
+            {rows.map(([label, key]) => (
+              <tr key={key}>
+                <th scope="row" className="py-2 pr-3 font-medium">{label}</th>
+                <td className={"py-2 pr-3 tabular-nums " + (key === "failed" && r.baseline.failed > 0 ? "text-bad font-semibold" : "text-ink-2")}><CountUp value={r.baseline[key]} /></td>
+                <td className={"py-2 tabular-nums " + (key === "passed" ? "text-ok font-semibold" : key === "failed" && r.after.failed > 0 ? "text-bad font-semibold" : "text-ink")}>
                   <CountUp value={r.after[key]} />
                   {key === "passed" && <> Passed{gained > 0 && " (+" + gained + ")"}</>}
                 </td>
@@ -95,7 +88,7 @@ function TestMatrix({ r }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -105,35 +98,30 @@ function Quality({ run }) {
   // Don't claim a green "0 detected" when the after-run never happened.
   const ran = run.status !== "env_failed" && (r.after.total > 0 || regs.length > 0);
   return (
-    <div className="md:col-span-5 flex flex-col gap-2">
-      <div className={CARD + " p-3"}>
+    <section className={CARD + " p-5 min-w-0 flex flex-col gap-4"} aria-labelledby="quality-title">
+      <div>
         <div className="flex items-center justify-between gap-2">
-          <div>
-            <div className="font-semibold text-xs text-slate-50">Regressions</div>
-            <div className="text-[11px] text-slate-400">Baseline integrity</div>
-          </div>
-          <span className={"px-2 py-0.5 border font-mono text-xs font-bold rounded-md whitespace-nowrap " +
-            (!ran ? "bg-amber-500/10 border-amber-500/25 text-amber-300" : regs.length ? "bg-rose-500/10 border-rose-500/25 text-rose-300" : "bg-emerald-500/10 border-emerald-500/25 text-emerald-300")}>
+          <h3 id="quality-title" className={H3}>Regressions</h3>
+          <span className={"px-2 py-0.5 border font-mono text-xs font-semibold rounded-md whitespace-nowrap " +
+            (!ran ? "bg-warn/10 border-warn/30 text-warn" : regs.length ? "bg-bad/10 border-bad/30 text-bad" : "bg-ok/10 border-ok/30 text-ok")}>
             {!ran ? "not run" : <>{regs.length ? "✕" : "✓"} <CountUp value={regs.length} /> detected</>}
           </span>
         </div>
-        {regs.length > 0 && (
-          <ul className="mt-2 space-y-1 font-mono text-[11px] text-rose-300 break-all">{regs.map((t) => <li key={t}>{String(t)}</li>)}</ul>
-        )}
+        {regs.length > 0 && <ul className="mt-2 space-y-1 font-mono text-xs text-bad break-all">{regs.map((t) => <li key={t}>{String(t)}</li>)}</ul>}
       </div>
-      <div className={CARD + " p-3 flex flex-col gap-1.5"}>
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-xs text-slate-50">New Tests Added</span>
-          <span className="font-mono text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-1.5 py-0.5 rounded font-medium"><CountUp value={r.new_tests.length} /> added</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className={H3}>New tests added</h3>
+          <span className="font-mono text-xs bg-ok/10 text-ok border border-ok/30 px-1.5 py-0.5 rounded"><CountUp value={r.new_tests.length} /> added</span>
         </div>
         {r.new_tests.length ? r.new_tests.map((t) => (
-          <div key={t} className="flex items-center gap-1.5 p-1.5 rounded bg-white/[0.03] border border-white/[0.08] font-mono text-[11px] text-slate-200">
-            <Icon name="check_circle" className="text-[15px] text-emerald-400 shrink-0" />
+          <div key={t} className="flex items-center gap-1.5 p-1.5 rounded bg-raised border border-line font-mono text-xs text-ink">
+            <Icon name="check_circle" className="text-base text-ok shrink-0" />
             <span className="truncate" title={t}>{String(t).split("::").pop()}</span>
           </div>
-        )) : <p className="text-[11px] text-slate-400">none</p>}
+        )) : <p className="text-sm text-ink-3">none</p>}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -149,58 +137,51 @@ export function Changes({ r }) {
   }, [picked, r.diff]);
   if (!file) return null;
   const LINE = {
-    add: ["bg-emerald-950/60 text-emerald-200 border-l-2 border-emerald-500", "text-emerald-400", "+"],
-    del: ["bg-rose-950/60 text-rose-200 border-l-2 border-rose-500", "text-rose-400", "-"],
-    ctx: ["text-slate-300 hover:bg-slate-800/50 border-l-2 border-transparent", "opacity-40", " "],
+    add: ["bg-ok/10 text-ink border-l-2 border-ok", "text-ok", "+"],
+    del: ["bg-bad/10 text-ink border-l-2 border-bad", "text-bad", "-"],
+    ctx: ["text-ink-2 border-l-2 border-transparent", "text-ink-3", " "],
   };
   return (
     <>
-      <div className={CARD + " p-3.5"}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-xs text-slate-50 flex items-center gap-1.5">
-            <Icon name="rule_folder" className="text-[16px] text-slate-400" />
-            Files Modified
-          </span>
-          <span className="font-mono text-[11px] text-slate-400"><CountUp value={files.length} /> {files.length === 1 ? "file" : "files"} changed</span>
+      <section className={CARD + " p-5 min-w-0"} aria-labelledby="files-title">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <h3 id="files-title" className={H3}>Files modified</h3>
+          <span className="font-mono text-xs text-ink-3"><CountUp value={files.length} /> {files.length === 1 ? "file" : "files"} changed</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 font-mono text-xs">
           {files.map((f, i) => (
-            <button key={f.path} type="button" aria-pressed={f === file} onClick={() => setPicked(i)} title={"Show the diff of " + f.path}
-                    className={"flex items-center justify-between gap-2 p-2 rounded-lg border text-left transition active:scale-[0.98] " +
-                      (f === file ? "bg-blue-500/10 border-blue-500/25" : "bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.06]")}>
+            <button key={f.path} type="button" aria-pressed={f === file} onClick={() => setPicked(i)} title={f.path}
+                    className={"flex items-center justify-between gap-2 p-2 rounded-lg border text-left transition-colors " +
+                      (f === file ? "bg-accent-fg/10 border-accent-fg/30" : "bg-raised border-line hover:border-line-strong")}>
               <span className="flex items-center gap-1.5 min-w-0">
-                <Icon name="description" className={"text-[16px] " + (f === file ? "text-blue-400" : "text-slate-500")} />
-                <span className="text-slate-200 font-medium truncate">{f.path}</span>
+                <Icon name="description" className={"text-base shrink-0 " + (f === file ? "text-accent-fg" : "text-ink-3")} />
+                <span className="text-ink truncate">{f.path}</span>
               </span>
-              <span className="flex items-center gap-1 text-[11px] shrink-0">
-                <span className="text-emerald-300 font-bold">+{f.add}</span>
-                <span className={(f.del ? "text-rose-400" : "text-slate-500") + " font-bold"}>-{f.del}</span>
+              <span className="flex items-center gap-1.5 shrink-0">
+                <span className="text-ok font-semibold">+{f.add}</span>
+                <span className={(f.del ? "text-bad" : "text-ink-3") + " font-semibold"}>-{f.del}</span>
               </span>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className={CARD + " overflow-hidden"}>
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.08]">
-          <div className="flex items-center gap-2 min-w-0">
-            <Icon name="difference" className="text-[17px] text-blue-400" />
-            <span className="font-semibold text-xs text-slate-50 whitespace-nowrap">Generated Unified Diff</span>
-            <span className="font-mono text-[11px] bg-white/10 text-slate-300 px-1.5 py-0.5 rounded truncate">{file.path}</span>
-          </div>
+      <section className={CARD + " overflow-hidden min-w-0"} aria-label="Diff">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-raised border-b border-line">
+          <span className="font-mono text-xs text-ink truncate min-w-0" title={file.path}>{file.path}</span>
           <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 px-2 py-0.5 rounded font-bold">+{file.add} additions</span>
-            <span className="bg-rose-500/10 text-rose-300 border border-rose-500/25 px-2 py-0.5 rounded font-bold">-{file.del} removals</span>
+            <span className="bg-ok/10 text-ok border border-ok/30 px-2 py-0.5 rounded font-semibold">+{file.add} additions</span>
+            <span className="bg-bad/10 text-bad border border-bad/30 px-2 py-0.5 rounded font-semibold">-{file.del} removals</span>
           </div>
         </div>
-        <div tabIndex="0" aria-label={"Diff of " + file.path} className="overflow-auto max-h-[520px] bg-[#040711]/85 text-slate-100 font-mono text-xs py-3 leading-relaxed">
+        <div tabIndex={0} role="region" aria-label={"Diff of " + file.path} className="overflow-auto max-h-[560px] bg-canvas text-ink font-mono text-xs py-3 leading-relaxed">
           <div ref={code} className="w-max min-w-full">
             {file.lines.map((line, i) => {
-              if (line.kind === "hunk") return <div key={i} className="text-slate-500 py-0.5 px-3 select-none text-[11px]">{line.text}</div>;
+              if (line.kind === "hunk") return <div key={i} className="text-ink-3 py-0.5 px-3 select-none">{line.text}</div>;
               const [row, mark, sign] = LINE[line.kind];
               return (
                 <div key={i} className={"flex items-center py-0.5 px-2 " + row}>
-                  <span className={"w-8 text-right select-none mr-3 text-[11px] shrink-0 " + mark}>{line.no}</span>
+                  <span className="w-8 text-right select-none mr-3 text-[11px] shrink-0 text-ink-3">{line.no}</span>
                   <span className={"w-4 select-none font-bold mr-1 text-center shrink-0 " + mark}>{sign}</span>
                   <code className="whitespace-pre">{line.text || " "}</code>
                 </div>
@@ -208,93 +189,173 @@ export function Changes({ r }) {
             })}
           </div>
         </div>
-      </div>
+      </section>
     </>
   );
 }
 
-function Waiting({ run, busy, steps }) {
-  const working = busy || !!run;
-  const current = steps.find((s) => s.status === "running");
+function RunMetadata({ r }) {
+  const feature = r.task_type === "feature";
   return (
-    <div className={CARD + " p-8 flex flex-col items-center text-center"}>
-      <div className="w-24 h-24 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-        <svg className="w-16 h-16 text-blue-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 64 64" aria-hidden="true">
-          <rect height="44" rx="3" strokeDasharray="2 2" width="48" x="8" y="10"></rect>
-          <path d="M16 20H28M16 26H36M16 32H24" strokeLinecap="round"></path>
-          <g className={working ? "scan" : ""}>
-            <circle cx="40" cy="40" fill="rgba(59,130,246,0.15)" r="10"></circle>
-            <path d="M47 47L55 55" strokeLinecap="round" strokeWidth="2"></path>
-            <path d="M37 40H43M40 37V43" strokeLinecap="round"></path>
-          </g>
-        </svg>
+    <section className={CARD + " p-5 min-w-0 flex flex-col gap-3"} aria-labelledby="meta-title">
+      <h3 id="meta-title" className={H3}>Run metadata</h3>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className={TILE}>
+          <div className={TILE_LABEL}>Branch</div>
+          <div className="font-mono text-sm font-semibold text-ink truncate mt-0.5" title={r.branch}>{r.branch || "none"}</div>
+        </div>
+        <div className={TILE}>
+          <div className={TILE_LABEL}>Attempts</div>
+          <div className="font-mono text-sm font-semibold text-ink mt-0.5"><CountUp value={r.attempts} /></div>
+        </div>
+        <div className={TILE}>
+          <div className={TILE_LABEL}>{feature ? "Mode" : "Reproduced"}</div>
+          <div className="font-mono text-sm font-semibold text-ink mt-0.5"
+               title={feature ? undefined : "Did the new test fail on the original code before the fix?"}>
+            {feature ? "feature" : r.syntax && r.syntax.only_syntax ? "n/a (syntax repair only)" : r.reproduced ? "yes" : "no"}
+          </div>
+        </div>
       </div>
-      <h3 className="font-semibold text-sm text-slate-50 mt-4">
-        {working ? "Agent is working" : "Ready to repair"}
-      </h3>
-      <p className="text-xs text-slate-400 max-w-xs mt-1 leading-relaxed">
-        {working ? (current ? "Current step: " + current.name : "Starting the run…")
-          : "Choose a repository, describe the task and press Execute Repair. The result, the test comparison and the diff appear here."}
-      </p>
-    </div>
+      {[["Report", r.report_path], ["Commit", r.commit_sha]].filter(([, v]) => v).map(([label, value]) => (
+        <div key={label}>
+          <div className={TILE_LABEL + " mb-0.5"}>{label}</div>
+          <div className="bg-raised border border-line pl-2.5 pr-1 py-1 rounded-lg flex items-center justify-between gap-2 font-mono text-xs">
+            {isHttps(value)
+              ? <a href={value} target="_blank" rel="noopener noreferrer" className="truncate text-accent-fg underline" title={value}>{value}</a>
+              : <span className="truncate text-ink-2" title={value}>{value}</span>}
+            <Copy text={value} />
+          </div>
+        </div>
+      ))}
+    </section>
   );
 }
 
-export default function Results({ run, busy, steps }) {
+function VerifiedImports({ r }) {
+  const items = Array.isArray(r.import_check) ? r.import_check : [];
+  return (
+    <section className={CARD + " p-5 min-w-0"} aria-labelledby="imports-title">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h3 id="imports-title" className={H3}>Verified imports &amp; scope</h3>
+        {items.length > 0 && <span className="font-mono text-xs text-ink-3"><CountUp value={items.length} /> verified</span>}
+      </div>
+      {items.length ? (
+        <ul className="flex flex-col gap-1.5 font-mono text-xs">
+          {items.map((item) => {
+            const m = /^(.*) \(([^)]+)\)$/.exec(String(item)); // "auth.users (repo)"
+            return (
+              <li key={item} className="bg-raised border border-line text-ink-2 px-2.5 py-1.5 rounded-md flex items-center justify-between gap-2">
+                <span className="truncate" title={m ? m[1] : String(item)}>{m ? m[1] : String(item)}</span>
+                {m && <span className="text-xs text-ink-3 px-1.5 rounded border border-line shrink-0">{m[2]}</span>}
+              </li>
+            );
+          })}
+        </ul>
+      ) : <p className="text-sm text-ink-3">The change added no new imports.</p>}
+    </section>
+  );
+}
+
+function Working({ steps }) {
+  const current = steps.find((s) => s.status === "running");
+  return (
+    <section className={CARD + " p-5 flex items-start gap-3"} aria-label="Current activity">
+      <Spinner className="text-2xl text-accent-fg shrink-0" />
+      <div className="min-w-0">
+        <p className="text-xs text-ink-3">Working on</p>
+        <p className="text-base font-semibold text-ink font-mono break-words">{current ? current.name : "Starting the run…"}</p>
+        <p className="text-sm text-ink-2 mt-1">The agent changes the code only on a scratch branch. It is committed to the project only after the tests pass.</p>
+      </div>
+    </section>
+  );
+}
+
+export default function RunView({ run, busy, steps, elapsed, head, project, task, taskType, repoLabel, onBack, backLabel, stored }) {
   const done = finished(run);
   // A run cut off by a crash can have a nearly empty result: fill in what the cards read.
   const r = done ? { attempts: 0, regressions: [], new_tests: [], baseline: {}, after: {}, ...run.result } : null;
-  if (r) run = { ...run, result: r };
+  const full = r ? { ...run, result: r } : run;
+  const type = (r && r.task_type) || taskType;
+  const current = steps.find((s) => s.status === "running");
+  const clock = elapsed != null ? Math.floor(elapsed / 60) + ":" + String(Math.floor(elapsed) % 60).padStart(2, "0") : null;
+  const meta = [repoLabel, type === "feature" ? "Feature" : type === "debug" ? "Debug" : "", run && "run " + run.id,
+    head && "continuing from head " + short(head)].filter(Boolean).join(" · ");
+
   const root = useRef(null);
   useAnime(root, () => { // each state's cards arrive one by one; the banner icon springs in
-    enter(root.current.children, { delay: (el, i) => i * 90 });
+    enter(root.current.children, { delay: (el, i) => i * 70 });
     pop(root.current.querySelectorAll("[data-pop]"), { scale: [0.3, 1], delay: 150 });
   }, [done, run && run.id]);
 
   return (
-    <div ref={root} className="flex flex-col gap-4 min-w-0">
-      {!r ? <Waiting run={run} busy={busy} steps={steps} /> : (
-        <>
-          <Banner run={run} />
-          {run.status === "success" && (
-            <div className={CARD + " p-4"}>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Icon name="psychology" className="text-[18px] text-blue-400" />
-                <h3 className="font-semibold text-sm text-slate-50">What changed &amp; Root Cause</h3>
-              </div>
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 text-slate-300 text-xs leading-relaxed whitespace-pre-wrap break-words">{r.explanation || "(no explanation given)"}</div>
-            </div>
+    <div className="flex flex-col gap-5 min-w-0">
+      <header className={CARD + " p-5 min-w-0"}>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          {onBack ? (
+            <button type="button" onClick={onBack} className={button("ghost", "sm") + " -ml-2.5"}>
+              <Icon name="arrow_back" className="text-base" />{backLabel}
+            </button>
+          ) : <span />}
+          <div className="flex items-center gap-3">
+            {stored && <span className="text-xs text-ink-2 border border-line-strong bg-raised rounded-full px-2 h-6 inline-flex items-center">Past run</span>}
+            <StatusPill status={run ? run.status : "running"} />
+            {clock && <span className="font-mono text-sm tabular-nums text-ink-2">{clock}</span>}
+          </div>
+        </div>
+        <h1 id="view-title" tabIndex={-1} className="text-xl font-semibold break-words">{task || "Run"}</h1>
+        {meta && <p className="mt-1 text-xs font-mono text-ink-3 break-words">{meta}</p>}
+        <p aria-live="polite" className="sr-only">
+          {done ? "Run " + (FINAL[run.status] || run.status) : current ? "Step " + current.name + " running" : "Starting the run…"}
+        </p>
+      </header>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] items-start">
+        <Steps run={run} steps={steps} />
+        <div ref={root} className="flex flex-col gap-5 min-w-0">
+          {!r ? (
+            <>
+              <Working steps={steps} />
+              <BuildsOn project={project} run={run} />
+            </>
+          ) : (
+            <>
+              <Banner run={full} />
+              {run.status === "success" && (
+                <section className={CARD + " p-5"} aria-labelledby="why-title">
+                  <h3 id="why-title" className={H3 + " mb-3 flex items-center gap-2"}><Icon name="psychology" className="text-xl text-accent-fg" />What changed &amp; root cause</h3>
+                  <div className="bg-raised border border-line rounded-lg p-3 text-ink-2 text-sm leading-relaxed whitespace-pre-wrap break-words">{r.explanation || "(no explanation given)"}</div>
+                </section>
+              )}
+              {r.syntax && (
+                <section className={CARD + " p-5"}>
+                  <h3 className={H3 + " mb-2"}>Syntax repair</h3>
+                  <ul className="font-mono text-xs text-ink-2 space-y-1 break-words">
+                    {(r.syntax.files || []).map((f) => <li key={f.path + ":" + f.line}>{f.path} line {f.line}: {f.msg} · {f.after}</li>)}
+                  </ul>
+                  {r.syntax.only_syntax && <p className="mt-2 text-sm text-ink-3">Bug reproduced: n/a (syntax repair only). There is no fail-first test for code that did not parse.</p>}
+                </section>
+              )}
+              {r.error && (
+                <section className={CARD + " p-5"}>
+                  <h3 className={H3 + " mb-2"}>{run.status === "env_failed" ? "pip / pytest trace output" : "Failure diagnostics"}</h3>
+                  <pre tabIndex={0} aria-label={run.status === "env_failed" ? "pip and pytest trace output" : "Failure diagnostics"}
+                       className={"bg-canvas border border-line p-3 rounded-lg font-mono text-xs whitespace-pre-wrap break-words overflow-auto max-h-80 leading-relaxed " + (run.status === "env_failed" ? "text-ink" : "text-bad")}>{r.error}</pre>
+                </section>
+              )}
+              {r.note && <Notice tone="warn"><span className="whitespace-pre-wrap">{r.note}</span></Notice>}
+              {run.status !== "env_failed" && (
+                <div className="grid gap-5 md:grid-cols-2 items-start">
+                  <TestMatrix r={r} />
+                  <Quality run={full} />
+                </div>
+              )}
+              {run.status === "success" && <Changes r={r} />}
+              <RunMetadata r={r} />
+              <VerifiedImports r={r} />
+            </>
           )}
-          {r.syntax && (
-            <div className={CARD + " p-4"}>
-              <h3 className="font-semibold text-sm text-slate-50 mb-2">Syntax repair</h3>
-              <ul className="font-mono text-xs text-slate-300 space-y-1 break-words">
-                {(r.syntax.files || []).map((f) => <li key={f.path + ":" + f.line}>{f.path} line {f.line}: {f.msg} · {f.after}</li>)}
-              </ul>
-              {r.syntax.only_syntax && <p className="mt-2 text-xs text-slate-400">Bug reproduced: n/a (syntax repair only). There is no fail-first test for code that did not parse.</p>}
-            </div>
-          )}
-          {r.error && (
-            <div className={CARD + " p-4"}>
-              <h3 className="font-semibold text-sm text-slate-50 mb-2">{run.status === "env_failed" ? "pip / pytest trace output" : "Failure Diagnostics"}</h3>
-              <pre className={"bg-[#040711]/85 border border-white/[0.08] p-3 rounded-lg font-mono text-xs whitespace-pre-wrap break-words overflow-auto max-h-80 leading-relaxed " + (run.status === "env_failed" ? "text-slate-200" : "text-rose-300")}>{r.error}</pre>
-            </div>
-          )}
-          {r.note && (
-            <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-3.5 text-xs text-amber-200 whitespace-pre-wrap break-words leading-relaxed flex gap-2">
-              <Icon name="info" className="text-[16px] text-amber-400 shrink-0" />
-              <span className="min-w-0">{r.note}</span>
-            </div>
-          )}
-          {run.status !== "env_failed" && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <TestMatrix r={r} />
-              <Quality run={run} />
-            </div>
-          )}
-          {run.status === "success" && <Changes r={r} />}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

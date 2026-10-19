@@ -1,74 +1,76 @@
-import { useState } from "react";
 import { MotionToggle } from "../motion.jsx";
-import { Icon, short } from "./ui.jsx";
+import { button, Icon } from "./ui.jsx";
+
+const MENU_ID = "account-menu";
 
 function Account({ me, onSignIn, onSignOut }) {
-  const [open, setOpen] = useState(false);
   if (!me.signed_in) { // offline mode: back to the login page
     return (
-      <button type="button" onClick={onSignIn}
-              className="h-[34px] px-3 rounded-md bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[14px] font-medium flex items-center gap-1.5 transition whitespace-nowrap">
-        <Icon name="login" className="text-[15px]" />
-        <span>Sign in</span>
-      </button>
+      <>
+        <span className="hidden md:inline-flex items-center h-6 px-2 rounded-full border border-line-strong bg-raised text-xs text-ink-2 whitespace-nowrap">Offline mode</span>
+        <button type="button" onClick={onSignIn} className={button("primary", "sm")}>Sign in</button>
+      </>
     );
   }
   const profile = "https://github.com/" + encodeURIComponent(me.login);
   return (
-    <div className="relative">
-      <button type="button" aria-haspopup="menu" aria-expanded={open} aria-label={"Account: " + me.login}
-              onClick={() => setOpen(!open)}
-              className="w-[38px] h-[38px] rounded-full bg-blue-600 overflow-hidden shadow-xs ring-2 ring-transparent hover:ring-blue-400/40 transition">
-        <img src={profile + ".png?size=76"} alt="" width="38" height="38" className="w-[38px] h-[38px]" />
+    <>
+      <button type="button" popoverTarget={MENU_ID} aria-label={"Account: " + me.login}
+              className="w-8 h-8 rounded-full bg-raised overflow-hidden border border-line-strong hover:border-ink-3 shrink-0">
+        <img src={profile + ".png?size=64"} alt="" width="32" height="32" className="w-8 h-8" />
       </button>
-      {open && (
-        <div role="menu" className="fade-in absolute right-0 mt-1.5 w-52 rounded-lg glass-raised p-1 z-50">
-          <a role="menuitem" href={profile} target="_blank" rel="noopener noreferrer" className="block px-2.5 py-1.5 rounded-md hover:bg-white/[0.03]">
-            <div className="text-[11px] text-slate-400">Signed in as</div>
-            <div className="font-mono text-xs text-slate-50 truncate">{me.login}</div>
-          </a>
-          <button role="menuitem" type="button" onClick={() => { setOpen(false); onSignOut(); }}
-                  className="w-full mt-0.5 px-2.5 py-1.5 rounded-md text-left text-xs font-medium text-rose-300 hover:bg-rose-500/10 flex items-center gap-1.5">
-            <Icon name="logout" className="text-[15px]" />
-            <span>Sign out</span>
-          </button>
-        </div>
-      )}
-    </div>
+      <div id={MENU_ID} popover="auto" style={{ position: "fixed", inset: "auto", right: "1rem", top: "3.5rem" }}
+           className="m-0 bg-raised border border-line rounded-lg p-1 w-56 text-ink">
+        <a href={profile} target="_blank" rel="noopener noreferrer" className="block px-2.5 py-1.5 rounded-md hover:bg-surface">
+          <span className="block text-xs text-ink-3">Signed in as</span>
+          <span className="block font-mono text-xs truncate">{me.login}</span>
+        </a>
+        <button type="button" className="w-full mt-0.5 px-2.5 py-1.5 rounded-md text-left text-sm text-bad hover:bg-bad/10 flex items-center gap-1.5"
+                onClick={() => { document.getElementById(MENU_ID)?.hidePopover(); onSignOut(); }}>
+          <Icon name="logout" className="text-base" />
+          <span>Sign out</span>
+        </button>
+      </div>
+    </>
   );
 }
 
-export default function Header({ me, online, repoName, project, onSignIn, onSignOut }) {
+export default function Header({ me, online, crumbs = [], onSignIn, onSignOut }) {
+  const dot = online ? "bg-ok" : online === false ? "bg-bad" : "bg-ink-3";
+  const text = online ? "API online" : online === false ? "API offline" : "API";
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#040711]/60 backdrop-blur-xl backdrop-saturate-150 border-b border-white/[0.06] shadow-[inset_0_-1px_0_rgba(59,130,246,0.08)] px-4 lg:px-8 py-4">
-      <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-[46px] h-[46px] rounded-xl bg-gradient-to-br from-blue-500/25 to-cyan-400/10 border border-blue-400/30 flex items-center justify-center text-blue-300 shadow-[0_0_24px_-6px_rgba(59,130,246,0.6)] shrink-0">
-            <Icon name="terminal" className="text-[26px]" />
-          </div>
-          <div className="min-w-0">
-            <div className="font-semibold text-[19px] leading-6 tracking-tight text-slate-50">CodeFix Agent</div>
-            <div className="mt-0.5 min-h-[22px] text-[14px] text-slate-400 flex items-center gap-2.5 min-w-0">
-              <span className="hidden md:inline truncate">Autonomous patch generation, test verification &amp; regression analysis</span>
-              {(project || repoName) && <span className="hidden md:inline-block w-1 h-1 rounded-full bg-white/[0.12] shrink-0"></span>}
-              {project
-                ? <span className="font-mono text-[13.5px] text-blue-300 bg-blue-500/10 border border-blue-500/25 rounded-md px-2 truncate">project: {project.display_name}{project.head_sha ? " @ " + short(project.head_sha) : ""}</span>
-                : repoName && <span className="text-blue-400 font-medium truncate">{repoName}</span>}
-            </div>
-          </div>
+    <header className="sticky top-0 z-40 h-14 bg-surface border-b border-line px-4 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="w-8 h-8 rounded-md bg-accent text-white flex items-center justify-center"><Icon name="terminal" className="text-xl" /></span>
+          <span className="hidden sm:inline font-semibold tracking-tight">CodeFix Agent</span>
         </div>
+        <nav aria-label="Breadcrumb" className="min-w-0">
+          <ol className="flex items-center gap-1 min-w-0 text-sm">
+            {crumbs.map((c, i) => {
+              const last = i === crumbs.length - 1;
+              const cls = (c.mono ? "font-mono text-xs " : "") + "truncate";
+              return (
+                <li key={i} className={"flex items-center gap-1 min-w-0 " + (last ? "" : "max-w-[16rem]")}>
+                  {i > 0 && <Icon name="chevron_right" className="text-base text-ink-3 shrink-0" />}
+                  {last ? <span aria-current="page" className={cls + " text-ink"}>{c.label}</span>
+                    : c.onClick ? <button type="button" onClick={c.onClick} className={button("ghost", "sm") + " min-w-0 !px-2 justify-start"}><span className={cls}>{c.label}</span></button>
+                    : <span className={cls + " text-ink-2"}>{c.label}</span>}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+      </div>
 
-        <div className="flex items-center gap-4 shrink-0">
-          <div role="status" className="hidden sm:inline-flex items-center gap-2 font-mono text-[13px] px-3 py-1 rounded-full border whitespace-nowrap bg-white/[0.04] text-slate-300 border-white/[0.08]">
-            <span className={"w-2 h-2 rounded-full " + (online ? "bg-emerald-500" : online === false ? "bg-rose-500" : "bg-slate-400")}></span>
-            {online ? "API online" : online === false ? "API offline" : "API"}
-          </div>
-          <MotionToggle className="hidden sm:flex text-[14px] font-medium !px-3 !py-1.5 !rounded-md" />
-          <span className="hidden lg:inline text-[14px] text-slate-400 whitespace-nowrap">
-            {me.signed_in ? "GitHub: " + me.login : "Offline: local folders only"}
-          </span>
-          <Account me={me} onSignIn={onSignIn} onSignOut={onSignOut} />
+      <div className="flex items-center gap-3 shrink-0">
+        <div role="status" className="inline-flex items-center gap-2 text-xs text-ink-2 whitespace-nowrap">
+          <span aria-hidden="true" className={"w-2 h-2 rounded-full " + dot}></span>
+          <span className="hidden sm:inline">{text}</span>
+          <span className="sm:hidden sr-only">{text}</span>
         </div>
+        <MotionToggle className="hidden sm:inline-flex" />
+        <Account me={me} onSignIn={onSignIn} onSignOut={onSignOut} />
       </div>
     </header>
   );

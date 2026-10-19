@@ -3,23 +3,22 @@ import { api, finished, planSteps, post } from "./api.js";
 import * as auth from "./auth.js";
 import Login from "./components/Login.jsx";
 import Header from "./components/Header.jsx";
-import ConfigColumn, { RunMetadata, TYPES, VerifiedImports } from "./components/ConfigColumn.jsx";
-import Progress, { BuildsOn } from "./components/Progress.jsx";
+import Composer, { TYPES } from "./components/ConfigColumn.jsx";
 import Projects from "./components/Projects.jsx";
 import ProjectView from "./components/ProjectView.jsx";
-import Results from "./components/Results.jsx";
-import { BUTTON, Icon, KIND } from "./components/ui.jsx";
+import RunView from "./components/Results.jsx";
+import { CARD, Icon, KIND, Notice, short, Spinner } from "./components/ui.jsx";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const SIGNED_OUT = { login: "", signed_in: false };
 const SAMPLE = { mode: "local", own: "", other: "", local: "sample_repo", taskType: "debug", task: TYPES.debug.sample };
 const isSample = (task) => Object.values(TYPES).some((t) => t.sample === task.trim());
-// Column widths: project view | live run | finished run
-const GRID = {
-  idle: "lg:grid-cols-[minmax(0,32fr)_minmax(0,68fr)]",
-  live: "lg:grid-cols-[minmax(0,30fr)_minmax(0,44fr)_minmax(0,23fr)]",
-  done: "lg:grid-cols-[minmax(0,30fr)_minmax(0,28fr)_minmax(0,42fr)]",
-};
+const STEPS = [
+  ["Understand", "Reads the repository and reproduces the problem."],
+  ["Change", "Plans and writes the smallest patch that fits."],
+  ["Test", "Runs the project's tests before and after the change."],
+  ["Verify", "Checks for regressions and keeps the change only if it holds."],
+];
 
 export default function App() {
   const [me, setMe] = useState(SIGNED_OUT);
@@ -228,50 +227,96 @@ export default function App() {
   const showRun = busy || !!run;
   const done = finished(run);
 
-  if (online === null) return null; // first /api/me answer decides between login page and console
+  const viewKey = showRun ? "run" : active ? "project:" + active.project_id : "home"; // "run" stays put while the first poll fills in the id
+
+  // Stop watching the run on screen (it keeps going on the server) and show the project again, fresh.
+  function leave() {
+    leaveRun();
+    if (active) refresh(active.project_id);
+  }
+  function goHome() {
+    leaveRun();
+    setActive(null);
+    setLink(null);
+    setConflict("");
+    setError("");
+    loadProjects();
+  }
+
+  // Move focus to the new view's heading when the view changes (not on first mount).
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) { firstView.current = false; return; }
+    const t = document.getElementById("view-title");
+    if (t) t.focus();
+  }, [viewKey]);
+
+  if (online === null) { // first /api/me answer decides between login page and console
+    return (
+      <div role="status" className="min-h-screen flex flex-col items-center justify-center gap-3 text-ink-2">
+        <span className="w-12 h-12 rounded-xl bg-accent text-white flex items-center justify-center"><Icon name="terminal" className="text-3xl" /></span>
+        <Spinner className="text-2xl text-accent-fg" />
+        <p className="text-sm">Connecting to the local server…</p>
+      </div>
+    );
+  }
   if (!me.signed_in && !offline) {
     return <Login online={online} canSignIn={auth.configured} error={error}
                   onGitHub={() => authAction(auth.signIn)} onOffline={() => setOffline(true)} />;
   }
 
+  const composer = (
+    <Composer form={form} setForm={setForm} me={me} repos={repos} onRefreshRepos={loadRepos}
+              busy={busy} onRun={startRun} linked={linked ? active : null} conflict={conflict} />
+  );
+  const crumbs = [{ label: "Home", onClick: goHome }];
+  if (active) crumbs.push({ label: active.display_name + (active.head_sha ? " @ " + short(active.head_sha) : ""), mono: true, onClick: showRun ? leave : undefined });
+  else if (repoName && showRun) crumbs.push({ label: repoName, mono: true });
+  if (showRun) crumbs.push({ label: run ? "Run " + run.id : "Starting run…" });
+
   return (
-    <div className="font-headline min-h-screen flex flex-col bg-transparent text-slate-50 antialiased">
-      <Header me={me} online={online} repoName={repoName} project={linked ? active : null}
+    <div className="min-h-screen flex flex-col bg-canvas text-ink">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-accent focus:text-white focus:px-3 focus:py-2">Skip to content</a>
+      <Header me={me} online={online} crumbs={crumbs}
               onSignIn={() => setOffline(false)} onSignOut={() => { setOffline(false); authAction(auth.signOut); }} />
-      <main className="flex-1 w-full max-w-[1920px] mx-auto p-4 lg:px-8 lg:py-7">
-        <div className={"grid grid-cols-1 gap-7 " + (done ? "items-start " + GRID.done : "lg:min-h-[calc(100vh-136px)] " + (showRun ? GRID.live : GRID.idle))}>
-          <ConfigColumn form={form} setForm={setForm} me={me} repos={repos} onRefreshRepos={loadRepos}
-                        busy={busy} onRun={startRun} error={error} onDismissError={() => setError("")}
-                        linked={linked ? active : null} conflict={conflict}>
-            <Projects projects={projects} activeId={active ? active.project_id : ""} compact={showRun} signedIn={me.signed_in}
-                      onSelect={select} onSignIn={() => (auth.configured ? authAction(auth.signIn) : setOffline(false))} />
-          </ConfigColumn>
+      <div className="flex-1 lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+        <nav aria-label="Projects" className="bg-surface border-b border-line lg:border-b-0 lg:border-r lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)]">
+          <Projects projects={projects} activeId={active ? active.project_id : ""} homeActive={viewKey === "home"} signedIn={me.signed_in}
+                    onSelect={select} onNew={goHome} onSignIn={() => (auth.configured ? authAction(auth.signIn) : setOffline(false))} />
+        </nav>
+        <main id="main" tabIndex={-1} className="min-w-0 w-full max-w-6xl mx-auto p-4 lg:p-6 flex flex-col gap-4 focus:outline-none">
+          {error && <Notice tone="bad" onDismiss={() => setError("")}>{error}</Notice>}
 
           {showRun ? (
-            <>
-              <div className="flex flex-col gap-4 min-w-0">
-                <Progress run={run} busy={busy} steps={steps} elapsed={elapsed} className={done ? "" : "flex-1"}
-                          head={(run && run.result && run.result.head_before) || (linked && !done ? active.head_sha : "")} />
-                {done && <RunMetadata run={run} />}
-                {done && <VerifiedImports run={run} />}
-              </div>
-              {done ? (
-                <div className="flex flex-col gap-4 min-w-0">
-                  <button type="button" onClick={leaveRun} className={BUTTON + " self-start flex items-center gap-1.5 !h-[36px] !px-3 !text-[13.5px]"}>
-                    <Icon name="arrow_back" className="text-[16px]" />
-                    <span>{active ? "Back to project" : "Close run"}</span>
-                  </button>
-                  <Results run={run} busy={busy} steps={steps} />
-                </div>
-              ) : <BuildsOn project={linked ? active : null} run={run} />}
-            </>
+            <RunView run={run} busy={busy} steps={steps} elapsed={elapsed}
+                     head={(run && run.result && run.result.head_before) || (linked && !done ? active.head_sha : "")}
+                     project={linked ? active : null} task={form.task} taskType={form.taskType}
+                     repoLabel={active ? active.display_name : repoName}
+                     onBack={leave} backLabel={done ? (active ? "Back to project" : "Close run") : "Leave — run keeps going"} stored={false} />
           ) : active ? (
-            <ProjectView key={active.project_id} project={active} onChanged={() => refresh(active.project_id)} onRerun={rerun}
-                         onSignedOut={loadMe}
+            <ProjectView key={active.project_id} project={active} composer={composer}
+                         onChanged={() => refresh(active.project_id)} onRerun={rerun} onSignedOut={loadMe}
+                         onWatch={async () => watchActive(await loadActive(active.project_id))}
                          onDeleted={() => { setActive(null); setLink(null); loadProjects(); }} />
-          ) : <Results run={null} busy={false} steps={steps} />}
-        </div>
-      </main>
+          ) : (
+            <>
+              <div>
+                <h1 id="view-title" tabIndex={-1} className="text-2xl font-semibold tracking-tight focus:outline-none">Start a new run</h1>
+                <p className="mt-1 text-sm text-ink-2">Describe a bug or a feature and CodeFix changes the code, tests it and verifies the result.</p>
+              </div>
+              <div className={CARD + " p-5 lg:p-6"}>{composer}</div>
+              <ol className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {STEPS.map(([name, text], i) => (
+                  <li key={name} className="text-sm">
+                    <span className="font-semibold text-ink">{i + 1}. {name}</span>
+                    <span className="block mt-0.5 text-ink-2">{text}</span>
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

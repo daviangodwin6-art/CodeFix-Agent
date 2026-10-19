@@ -1,7 +1,5 @@
-import { useRef } from "react";
-import { finished, isHttps } from "../api.js";
-import { CountUp, enter, useAnime } from "../motion.jsx";
-import { CARD, Copy, Icon, plural, short } from "./ui.jsx";
+import { useEffect, useState } from "react";
+import { FIELD, Icon, KindBadge, Notice, Spinner, button, plural, short } from "./ui.jsx";
 
 export const TYPES = {
   debug: { option: "Debug", label: "Target Task / Bug Report", sample: "login fails when the email has capital letters" },
@@ -9,12 +7,32 @@ export const TYPES = {
              sample: "add a function email_domain(email) in auth/users.py that returns the part after the @, lowercased" },
 };
 const MODES = [["own", "My repo"], ["other", "Other's"], ["local", "Local"]];
-const FIELD = "w-full h-10 bg-[#040711]/60 border border-white/[0.08] text-slate-50 font-mono text-[14.5px] rounded-lg px-3.5 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:bg-[#040711]/80 transition-all";
-const TILE = "bg-white/[0.03] border border-white/[0.08] p-2 rounded-lg min-w-0";
-const TILE_LABEL = "text-[10px] text-slate-400 uppercase font-mono font-medium";
+
+// Segmented control on native radios: arrow keys work, the checked label is highlighted, focus ring shows on the label.
+function Segment({ name, value, onChange, options, disabled }) {
+  return (
+    <div className="grid gap-px rounded-lg border border-line-strong bg-line-strong overflow-hidden"
+         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map(([id, text, sub, off]) => (
+        <label key={id} className={"relative flex flex-col items-center justify-center px-2 py-2 text-center cursor-pointer bg-raised text-ink-2 hover:text-ink " +
+            "has-[:checked]:bg-accent-fg/15 has-[:checked]:text-accent-fg has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-accent-fg " +
+            ((disabled || off) ? "opacity-50 cursor-not-allowed" : "")}>
+          <input type="radio" name={name} value={id} checked={value === id} disabled={disabled || off}
+                 onChange={() => onChange(id)} className="sr-only" />
+          <span className="text-sm font-medium">{text}</span>
+          {sub && <span className="text-xs text-ink-3">{sub}</span>}
+        </label>
+      ))}
+    </div>
+  );
+}
 
 // `linked` is the active project when the Repository field still points at it; `conflict` names a busy project (HTTP 409).
-function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRun, error, onDismissError, linked, conflict }) {
+export default function Composer({ form, setForm, me, repos, onRefreshRepos, busy, onRun, linked, conflict }) {
+  const [changing, setChanging] = useState(false);
+  const linkedId = linked && linked.project_id;
+  useEffect(() => { setChanging(false); }, [linkedId]);
+
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const type = TYPES[form.taskType];
   const list = Array.isArray(repos) ? repos : null;
@@ -25,190 +43,86 @@ function RunConfiguration({ form, setForm, me, repos, onRefreshRepos, busy, onRu
     set({ taskType, task: keep ? form.task : TYPES[taskType].sample });
   }
 
-  return (
-    <section className={CARD + " p-[22px] flex flex-col gap-4"}>
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-[17.5px] text-slate-50">Run Configuration</h2>
-        <select aria-label="What should the agent do?" value={form.taskType} disabled={busy} onChange={(e) => changeType(e.target.value)}
-                className="font-mono text-[13.5px] bg-white/[0.03] text-slate-200 px-2 h-[30px] rounded-md border border-white/[0.08] cursor-pointer outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-100">
-          {Object.entries(TYPES).map(([id, t]) => <option key={id} value={id}>{t.option}</option>)}
-        </select>
-      </div>
+  const hintId = "repo-hint";
+  const repoField = form.mode === "own" ? (
+    <div className="flex gap-2">
+      <select id="repo-own" aria-label="Repository" value={form.own} onChange={(e) => set({ own: e.target.value })}
+              disabled={!form.own && !(list && list.length)} className={FIELD + " h-9 font-mono"}>
+        {/* a project's repository stays selectable even when it is not in the loaded list */}
+        {form.own && !(list || []).some((r) => r.url === form.own) && <option value={form.own}>{form.own.replace(/^https:\/\//, "")}</option>}
+        {!list ? !form.own && <option>Loading…</option>
+          : !list.length ? !form.own && <option>No repositories found</option>
+          : list.map((r) => <option key={r.url} value={r.url}>{r.name + (r.private ? "  (private)" : "")}</option>)}
+      </select>
+      <button type="button" aria-label="Refresh repository list" title="Refresh" onClick={onRefreshRepos}
+              className={button("secondary", "md") + " w-9 px-0 shrink-0"}>
+        <Icon name="refresh" className="text-lg" />
+      </button>
+    </div>
+  ) : (
+    <>
+      <input id={"repo-" + form.mode} aria-label="Repository" aria-describedby={hintId} type="text" value={form[form.mode]}
+             onChange={(e) => set({ [form.mode]: e.target.value })} autoComplete="off" spellCheck="false"
+             placeholder={form.mode === "other" ? "https://github.com/owner/name" : undefined} className={FIELD + " h-9 font-mono"} />
+      <p id={hintId} className="mt-1.5 text-xs text-ink-3">
+        {form.mode === "other" ? "A public repository you can't push to. CodeFix forks it." : "Folder path or git URL. Your original folder is never modified."}
+      </p>
+    </>
+  );
 
-      {error && (
-        <div role="alert" className="fade-in bg-rose-500/10 border border-rose-500/25 text-rose-200 p-3 rounded-lg flex items-start gap-2">
-          <Icon name="error" className="text-[18px] text-rose-400 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0 text-[13px] text-rose-300 break-words whitespace-pre-wrap leading-snug">{error}</div>
-          <button type="button" aria-label="Dismiss error" onClick={onDismissError} className="text-rose-400 hover:text-rose-300 p-0.5">
-            <Icon name="close" className="text-[15px]" />
-          </button>
+  return (
+    <form className="flex flex-col gap-5" onSubmit={(e) => { e.preventDefault(); if (form.task.trim()) onRun(); }}>
+      <fieldset disabled={busy} className="min-w-0">
+        <legend className="mb-2 text-sm font-medium text-ink">What should the agent do?</legend>
+        <Segment name="task-type" value={form.taskType} onChange={changeType} disabled={busy}
+                 options={[["debug", "Debug", "fix a bug"], ["feature", "Feature", "add behaviour"]]} />
+      </fieldset>
+
+      {linked && !changing ? (
+        <div className="rounded-lg bg-raised p-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-ink">
+            <span>Runs on <strong className="font-semibold break-all">{linked.display_name}</strong></span>
+            <KindBadge kind={linked.kind} />
+          </div>
+          <p className="mt-1 font-mono text-xs text-ink-3 break-words">
+            continues from head {short(linked.head_sha)} · {plural(linked.changes_ahead_of_base, "earlier change")} kept
+          </p>
+          {!busy && <button type="button" onClick={() => setChanging(true)} className={button("ghost", "sm") + " mt-2 -ml-2.5"}>Use a different repository</button>}
         </div>
+      ) : (
+        <fieldset disabled={busy} className="min-w-0">
+          <legend className="mb-2 text-sm font-medium text-ink">Repository</legend>
+          <div className="flex flex-col gap-3">
+            <div>
+              <p id="mode-label" className="mb-1.5 text-xs text-ink-3">Whose repository?</p>
+              <Segment name="repo-mode" value={form.mode} onChange={(mode) => set({ mode })} disabled={busy}
+                       options={MODES.map(([id, text]) => [id, text, null, id !== "local" && !me.signed_in])} />
+              {!me.signed_in && <p className="mt-1.5 text-xs text-ink-3">Sign in with GitHub to use GitHub repositories.</p>}
+            </div>
+            <div>{repoField}</div>
+          </div>
+        </fieldset>
       )}
 
-      <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); onRun(); }}>
-        {busy ? ( // a run is on screen: the repository cannot change under it
-          <input type="text" readOnly aria-label="Repository" value={form[form.mode].replace(/^https:\/\//, "")} className={FIELD} />
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            <div className="text-[15.5px] font-semibold text-slate-50 flex items-center justify-between gap-2">
-              <label htmlFor={"repo-" + form.mode}>Repository</label>
-              <span role="radiogroup" aria-label="Whose repository is it?" className="flex font-mono text-[12.5px] font-normal">
-                {MODES.map(([id, text], i) => {
-                  const off = id !== "local" && !me.signed_in;
-                  return (
-                    <button key={id} type="button" role="radio" aria-checked={form.mode === id} disabled={off}
-                            title={off ? "Sign in with GitHub first" : undefined} onClick={() => set({ mode: id })}
-                            className={"px-2.5 py-0.5 border transition-colors " + (i ? "-ml-px " : "rounded-l ") + (i === MODES.length - 1 ? "rounded-r " : "") +
-                              (form.mode === id ? "bg-blue-500/10 text-blue-300 font-semibold border-blue-500/25 z-10 relative " : "bg-white/[0.04] text-slate-400 border-white/[0.08] hover:bg-white/[0.03] ") +
-                              (off ? "opacity-50 cursor-not-allowed" : "")}>
-                      {text}
-                    </button>
-                  );
-                })}
-              </span>
-            </div>
-            <div className="flex items-center">
-              {form.mode === "own" ? (
-                <>
-                  <select id="repo-own" value={form.own} onChange={(e) => set({ own: e.target.value })} disabled={!form.own && !(list && list.length)} className={FIELD}>
-                    {/* a project's repository stays selectable even when it is not in the loaded list */}
-                    {form.own && !(list || []).some((r) => r.url === form.own) && <option value={form.own}>{form.own.replace(/^https:\/\//, "")}</option>}
-                    {!list ? !form.own && <option>Loading…</option>
-                      : !list.length ? !form.own && <option>No repositories found</option>
-                      : list.map((r) => <option key={r.url} value={r.url}>{r.name + (r.private ? "  (private)" : "")}</option>)}
-                  </select>
-                  <button type="button" aria-label="Refresh repository list" title="Refresh" onClick={onRefreshRepos}
-                          className="ml-2 w-10 h-10 shrink-0 rounded-lg bg-white/[0.06] hover:bg-white/10 active:scale-95 text-slate-400 border border-white/[0.08] transition flex items-center justify-center">
-                    <Icon name="refresh" className="text-[18px]" />
-                  </button>
-                </>
-              ) : form.mode === "other" ? (
-                <input id="repo-other" type="text" value={form.other} onChange={(e) => set({ other: e.target.value })} autoComplete="off" spellCheck="false" className={FIELD} />
-              ) : (
-                <input id="repo-local" type="text" value={form.local} onChange={(e) => set({ local: e.target.value })} autoComplete="off" spellCheck="false" className={FIELD} />
-              )}
-            </div>
-          </div>
-        )}
+      <div>
+        <label htmlFor="task-input" className="mb-2 block text-sm font-medium text-ink">{type.label}</label>
+        <textarea id="task-input" rows="4" value={form.task} readOnly={busy} aria-describedby="task-hint"
+                  onChange={(e) => set({ task: e.target.value })}
+                  onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); e.currentTarget.form.requestSubmit(); } }}
+                  placeholder="Describe the next bug or feature…" className={FIELD + " resize-y"} />
+        <p id="task-hint" className="mt-1.5 text-xs text-ink-3">
+          Ctrl+Enter to run{form.taskType === "feature" && ". Name any required function or module exactly."}
+        </p>
+      </div>
 
-        <div className="flex flex-col gap-2.5">
-          <label htmlFor="task-input" className="text-[15.5px] font-semibold text-slate-50">{type.label}</label>
-          <textarea id="task-input" rows="3" value={form.task} readOnly={busy} onChange={(e) => set({ task: e.target.value })}
-                    placeholder="Describe the next bug or feature…"
-                    className="w-full h-[95px] bg-white/[0.04] border border-white/[0.08] text-slate-50 text-[14.5px] rounded-lg px-3.5 py-3 outline-none placeholder:text-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none leading-snug" />
-        </div>
-
-        <button type="submit" disabled={busy}
-                className="sheen w-full h-[49px] bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:brightness-110 active:scale-[0.99] text-white rounded-lg text-[15.5px] font-semibold flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_8px_30px_-8px_rgba(59,130,246,0.8)] transition-all disabled:opacity-50 disabled:hover:brightness-100 disabled:cursor-not-allowed disabled:active:scale-100">
-          {!busy && <Icon name="play_arrow" fill className="text-[20px]" />}
-          <span>{busy ? "Running…" : "Execute Repair"}</span>
-        </button>
-      </form>
+      <button type="submit" disabled={busy || !form.task.trim()} className={button("primary", "lg") + " w-full"}>
+        {busy ? <Spinner className="text-xl" /> : <Icon name="play_arrow" fill className="text-xl" />}
+        <span>{busy ? "Starting…" : form.taskType === "feature" ? "Build feature" : "Run repair"}</span>
+      </button>
 
       {conflict && (
-        <p role="status" className="fade-in rounded-lg border border-amber-500/25 bg-amber-500/10 px-3.5 py-3 text-[13.5px] text-amber-200 leading-snug break-words">
-          Project is busy. A run is already active on {conflict}. You can start a run on another project.
-        </p>
+        <Notice tone="warn">Project is busy. A run is already active on {conflict}. You can start a run on another project.</Notice>
       )}
-      {linked && !busy && (
-        <p className="font-mono text-[12.5px] text-slate-400 break-words">
-          Continues from head {short(linked.head_sha)} · {plural(linked.changes_ahead_of_base, "earlier change")} kept
-        </p>
-      )}
-    </section>
-  );
-}
-
-export function VerifiedImports({ run }) {
-  const items = finished(run) && Array.isArray(run.result.import_check) ? run.result.import_check : [];
-  return (
-    <section className={CARD + " p-4"}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-xs text-slate-50 flex items-center gap-1.5">
-          <Icon name="search_check" className="text-[16px] text-slate-400" />
-          Verified Imports &amp; Scope
-        </span>
-        {items.length > 0 && <span className="font-mono text-[10px] text-slate-500"><CountUp value={items.length} /> verified</span>}
-      </div>
-      {items.length ? (
-        <div className="flex flex-col gap-1.5 font-mono text-xs">
-          {items.map((item) => {
-            const m = /^(.*) \(([^)]+)\)$/.exec(String(item)); // "auth.users (repo)"
-            return (
-              <div key={item} className="bg-white/[0.03] border border-white/[0.08] text-slate-300 px-2.5 py-1.5 rounded-md flex items-center justify-between gap-2">
-                <span className="truncate" title={m ? m[1] : item}>{m ? m[1] : String(item)}</span>
-                {m && <span className="text-[10px] text-slate-500 bg-white/[0.04] px-1.5 py-0.5 rounded border border-white/[0.08] shrink-0">{m[2]}</span>}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <p className="text-[11px] text-slate-400 leading-snug">
-          {finished(run) ? "The change added no new imports." : "Every import a change adds is checked to really exist. The list appears after a run."}
-        </p>
-      )}
-    </section>
-  );
-}
-
-export function RunMetadata({ run }) {
-  const r = finished(run) ? run.result : null;
-  const feature = r && r.task_type === "feature";
-  return (
-    <section className={CARD + " p-4 flex flex-col gap-3"}>
-      <div className="flex items-center justify-between">
-        <span className="font-semibold text-xs text-slate-50 flex items-center gap-1.5">
-          <Icon name="info" className="text-[16px] text-slate-400" />
-          Run Metadata
-        </span>
-        {run && <span className="font-mono text-[10px] text-slate-400">#{run.id}</span>}
-      </div>
-      {!r ? (
-        <p className="text-[11px] text-slate-400 leading-snug">{run ? "Filled in when the run finishes." : "No run yet."}</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className={TILE}>
-              <div className={TILE_LABEL}>Branch</div>
-              <div className="font-mono text-xs font-semibold text-slate-200 truncate mt-0.5" title={r.branch}>{r.branch || "none"}</div>
-            </div>
-            <div className={TILE}>
-              <div className={TILE_LABEL}>Attempts</div>
-              <div className="font-mono text-xs font-semibold text-slate-200 mt-0.5"><CountUp value={r.attempts} /></div>
-            </div>
-            <div className={TILE}>
-              <div className={TILE_LABEL}>{feature ? "Mode" : "Reproduced"}</div>
-              <div className="font-mono text-xs font-semibold text-slate-200 mt-0.5"
-                   title={feature ? undefined : "Did the new test fail on the original code before the fix?"}>
-                {feature ? "feature" : r.syntax && r.syntax.only_syntax ? "n/a (syntax repair only)" : r.reproduced ? "yes" : "no"}
-              </div>
-            </div>
-          </div>
-          {[["Report", r.report_path], ["Commit", r.commit_sha]].filter(([, v]) => v).map(([label, value]) => (
-            <div key={label}>
-              <div className={TILE_LABEL + " mb-0.5"}>{label}</div>
-              <div className="bg-white/[0.03] border border-white/[0.08] p-2 rounded-lg flex items-center justify-between text-slate-400 font-mono text-[11px]">
-                {isHttps(value)
-                  ? <a href={value} target="_blank" rel="noopener noreferrer" className="truncate text-blue-400 underline" title={value}>{value}</a>
-                  : <span className="truncate text-slate-400" title={value}>{value}</span>}
-                <Copy text={value} />
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-    </section>
-  );
-}
-
-// Left column: the run form, then whatever the page puts under it (the Projects card).
-export default function ConfigColumn({ children, ...props }) {
-  const root = useRef(null);
-  useAnime(root, () => enter(root.current.children, { delay: (el, i) => i * 90 }), []);
-  return (
-    <div ref={root} className="flex flex-col gap-[22px] min-w-0">
-      <RunConfiguration {...props} />
-      {children}
-    </div>
+    </form>
   );
 }
